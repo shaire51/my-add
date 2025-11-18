@@ -1,0 +1,48 @@
+/* 導覽列 -------------------------------------------------- */
+
+.nav {
+  height: 80px;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 80px;
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.nav-center {
+  display: flex;
+  gap: 30px;
+  color: black;
+}
+
+.nav a {
+  color: #000;
+  text-decoration: none; /* 如果不要底線 */
+}
+
+.nav-link {
+  border: none;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+.nav-right .login-btn {
+  padding: 10px 30px;
+  border-radius: 999px;
+  border: 1px solid #000;
+  background: #000;
+  color: #000000;
+  font-size: 14px;
+  cursor: pointer;
+}

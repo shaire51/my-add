@@ -1,0 +1,195 @@
+/* 整個預約頁外框：讓內容置中 */
+.reserve-page {
+  width: 100%;
+  min-height: calc(100vh - 80px); /* 上下留一點空間 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 80px;
+  box-sizing: border-box;
+}
+
+/* ===== 上面那一大塊「會議預約系統 + 規範」 ===== */
+
+.reserve-hero {
+  width: 100%;
+  max-width: 1040px;
+  margin-bottom: 60px;
+}
+
+.reserve-hero-inner {
+  border: 2px solid #000;
+  background: #fff;
+  padding: 24px 28px;
+  box-shadow: 5px 5px 10px black;
+}
+
+.reserve-title {
+  margin: 0 0 8px;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.reserve-subtitle {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #777;
+}
+
+.reserve-rules {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ===== 中間白色卡片表單 ===== */
+
+.reserve-form-section {
+  width: 100%;
+  max-width: 720px;
+  text-align: center;
+}
+
+.reserve-form-title {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.reserve-form {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 24px 28px 28px;
+  text-align: left;
+}
+
+/* 一行兩個欄位用到 */
+.reserve-row {
+  display: flex;
+  gap: 12px;
+}
+
+.reserve-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.reserve-field label {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* input / select 共用樣式 */
+.reserve-field input,
+.reserve-field select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  background: #fafafa;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.reserve-field input:focus,
+.reserve-field select:focus {
+  border-color: #000;
+  background: #fff;
+}
+
+/* ===== 時間區塊（開始 / 結束） ===== */
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-select {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-select select {
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  background: #fafafa;
+  outline: none;
+}
+
+.time-select select:focus {
+  border-color: #000;
+  background: #fff;
+}
+
+.colon {
+  padding: 0 2px;
+  font-size: 15px;
+}
+
+.time-sep {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+/* ===== 送出按鈕 & 訊息 ===== */
+
+.reserve-submit {
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  padding: 11px 0;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.reserve-submit:hover {
+  opacity: 0.9;
+}
+
+.msg {
+  margin-top: 14px;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.msg.ok {
+  background: #e9ffe9;
+  border: 1px solid #2eaf45;
+  color: #207b30;
+}
+
+.msg.error {
+  background: #ffeaea;
+  border: 1px solid #e14b4b;
+  color: #b33030;
+}
+
+/* 簡單 RWD：窄螢幕時改成一欄 */
+@media (max-width: 768px) {
+  .reserve-hero-inner {
+    padding: 18px 20px;
+  }
+
+  .reserve-form {
+    padding: 20px 18px 22px;
+  }
+
+  .reserve-row {
+    flex-direction: column;
+  }
+}
