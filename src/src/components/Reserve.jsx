@@ -153,9 +153,9 @@ export default function Reserve() {
           <h1 className="reserve-title">會議預約系統</h1>
           <p className="reserve-subtitle">預約規範說明</p>
           <ol className="reserve-rules">
-            <li>會議可預約時段為 8:00 ~ 17:00。</li>
+            <li>會議可預約時段為 8:00 ~ 18:00。</li>
             <li>不得與其他會議時間重複。</li>
-            <li>請提前填寫完整資訊以便審核。</li>
+            <li>填寫表單前請先登入員工帳號</li>
           </ol>
         </div>
       </section>

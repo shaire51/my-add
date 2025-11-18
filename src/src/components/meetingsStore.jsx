@@ -65,6 +65,20 @@ function isOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && aEnd > bStart;
 }
 
+// ⭐ 新增：統一判斷「這筆會議是否已經過期」
+// 條件：
+// - 日期 < 今天 → 過期
+// - 日期 == 今天 且 endMin <= 現在分鐘 → 過期（= 會議「結束」才算過期）
+function isMeetingExpired(m, now) {
+  const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  if (m.date < today) return true;
+  if (m.date === today && m.endMin <= nowMin) return true;
+
+  return false;
+}
+
 const KEY = "meetings_v1";
 
 const MeetingsCtx = createContext(null);
@@ -87,19 +101,25 @@ export function MeetingsProvider({ children }) {
   const api = useMemo(() => {
     return {
       meetings,
-      // 檢查同日同地點是否與現有時段衝突
       deleteMeeting(id) {
         setMeetings((prev) => prev.filter((m) => m.id !== id));
         return { ok: true };
       },
+
+      // ⭐ hasConflict 只檢查「還沒結束的會議」
       hasConflict({ date, place, startMin, endMin }) {
-        return meetings.some(
-          (m) =>
+        const now = new Date();
+        return meetings.some((m) => {
+          if (isMeetingExpired(m, now)) return false; // 過期的不算衝突
+
+          return (
             m.date === date &&
             m.place === place &&
             isOverlap(startMin, endMin, m.startMin, m.endMin)
-        );
+          );
+        });
       },
+
       // 新增會議（回傳 { ok, error }）
       addMeeting(payload) {
         const {
@@ -142,14 +162,19 @@ export function MeetingsProvider({ children }) {
           return { ok: false, error: "日期無效" };
         }
 
-        // 4) 衝突檢查（同日同地點重疊）
+        const now = new Date();
+
+        // 4) 衝突檢查（同日同地點重疊，且只看「尚未結束」的會議）
         if (
-          meetings.some(
-            (m) =>
+          meetings.some((m) => {
+            if (isMeetingExpired(m, now)) return false;
+
+            return (
               m.date === date &&
               m.place === place &&
               isOverlap(startMin, endMin, m.startMin, m.endMin)
-          )
+            );
+          })
         ) {
           return { ok: false, error: "該地點在此時段已被預約（有重疊）" };
         }
@@ -174,23 +199,20 @@ export function MeetingsProvider({ children }) {
             attachments,
           },
         ];
-        setMeetings(next);
+
+        // ⭐ 順便把已過期的清掉（可有可無，但這樣 localStorage 不會一直累積）
+        const cleaned = next.filter((m) => !isMeetingExpired(m, now));
+
+        setMeetings(cleaned);
         return { ok: true };
       },
-      // 方便 Ppap 直接拿表格資料
+
+      // 方便 Body / Ppap 直接拿表格資料
       toRows() {
         const now = new Date();
-        const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
-        const nowMin = now.getHours() * 60 + now.getMinutes();
 
         return [...meetings]
-          .filter((m) => {
-            if (m.date < today) return false;
-
-            if (m.date === today && m.endMin <= nowMin) return false;
-
-            return true;
-          })
+          .filter((m) => !isMeetingExpired(m, now)) // ⭐ 只保留還沒結束的
           .sort((a, b) =>
             a.date === b.date
               ? a.startMin - b.startMin
