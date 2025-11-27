@@ -4,11 +4,12 @@
   height: 120px;
   border-top: 1px solid #e0e0e0;
   background: #ffffff;
-  padding: 16px 80px 18px;
+  padding: 16px 100px 18px;
   font-size: 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
 }
 
 .footer-top {
@@ -31,4 +32,13 @@
 .footer-icons {
   display: flex;
   gap: 10px;
+}
+
+.footer img {
+  position: absolute;
+  bottom: 0; /* ⭐ 貼齊 footer 底部 */
+  right: 0; /* ⭐ 貼齊 footer 右側 */
+  width: 120px; /* 你可調整大小 */
+  height: auto;
+  pointer-events: none;
 }

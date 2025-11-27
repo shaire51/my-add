@@ -17,6 +17,7 @@ export default function Foot() {
           <span>無法使用請聯絡資訊課：張文川 #4553</span>
         </div>
       </div>
+      <img src="/粉紅三角色塊.png" alt="" />
     </footer>
   );
 }
