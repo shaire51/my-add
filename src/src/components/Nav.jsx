@@ -18,7 +18,9 @@ export default function Nav() {
       </div>
 
       <div className="nav-right">
-        <button className="nav-login-btn">員工登入</button>
+        <Link to="/login" className="nav-login-btn">
+          員工登入
+        </Link>
       </div>
     </nav>
   );

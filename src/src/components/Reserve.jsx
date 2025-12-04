@@ -97,7 +97,7 @@ export default function Reserve() {
       return;
     }
 
-    // 處理附件
+    // 處理附件（先給前端用來預覽，後端目前還沒存附件）
     let attachments = [];
     if (form.file) {
       const dataUrl = await readFileAsDataURL(form.file);
@@ -110,41 +110,72 @@ export default function Reserve() {
         },
       ];
     }
+    try {
+      const payload = {
+        name: form.name.trim(),
+        unit: form.unit.trim(),
+        date: form.date, // DATE
+        start_time: form.start, // TIME
+        end_time: form.end, // TIME
+        people: form.people.trim(),
+        reporter: form.reporter.trim(),
+        place: form.place.trim(),
+        // 這三個先不傳，之後要做附件再一起改
+        // attachment_name: attachments[0]?.name || null,
+        // attachment_type: attachments[0]?.type || null,
+        // attachment_data: attachments[0]?.dataUrl || null,
+      };
 
-    // ★ 丟進 meetingsStore 的 addMeeting
-    const { ok, error } = addMeeting({
-      name: form.name.trim(),
-      unit: form.unit.trim(),
-      date: form.date,
-      start: form.start,
-      end: form.end,
-      people: form.people.trim(),
-      reporter: form.reporter.trim(),
-      place: form.place.trim(),
-      attachments,
-    });
+      const res = await fetch("http://localhost:3001/api/meetings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!ok) {
-      setMsg({ type: "error", text: error || "預約失敗" });
-      return;
+      if (!res.ok) {
+        throw new Error("後端儲存失敗");
+      }
+
+      const data = await res.json();
+      console.log("後端新增成功，ID =", data.id);
+
+      const { ok, error } = addMeeting({
+        id: data.id,
+        name: form.name.trim(),
+        unit: form.unit.trim(),
+        date: form.date,
+        start: form.start,
+        end: form.end,
+        people: form.people.trim(),
+        reporter: form.reporter.trim(),
+        place: form.place.trim(),
+        attachments,
+      });
+
+      if (!ok) {
+        setMsg({ type: "error", text: error || "預約失敗（前端 store）" });
+        return;
+      }
+
+      setMsg({ type: "ok", text: "預約成功，已寫入資料庫並加入排程！" });
+
+      // 清空表單
+      setForm({
+        name: "",
+        unit: "",
+        date: "",
+        start: "",
+        end: "",
+        reporter: "",
+        people: "",
+        place: "",
+        file: null,
+      });
+    } catch (err) {
+      console.error(err);
+      setMsg({ type: "error", text: "預約失敗（後端無法儲存）" });
     }
-
-    setMsg({ type: "ok", text: "預約成功，已加入會議排程！" });
-
-    // 清空表單
-    setForm({
-      name: "",
-      unit: "",
-      date: "",
-      start: "",
-      end: "",
-      reporter: "",
-      people: "",
-      place: "",
-      file: null,
-    });
   };
-
   return (
     <div className="reserve-page">
       {/* 上面大框 */}

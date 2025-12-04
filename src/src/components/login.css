@@ -1,0 +1,80 @@
+/* 整個登入頁的主區塊（會包在你原本的 Nav / Foot 中間） */
+.login-main {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 16px; /* 跟截圖一樣有點留白 */
+  box-sizing: border-box;
+}
+
+/* 中間的白色卡片 */
+.login-card {
+  width: 520px;
+  max-width: 100%;
+  padding: 40px 56px 48px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background-color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* 標題：員工登入系統 */
+.login-title {
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 32px;
+}
+
+/* 表單整體 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 單一欄位 */
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 標籤文字：員工編號/員工密碼 */
+.login-label {
+  font-size: 14px;
+}
+
+/* 輸入框 */
+.login-input {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  border-color: #111;
+}
+
+/* 登入按鈕 */
+.login-button {
+  margin-top: 8px;
+  width: 100%;
+  height: 52px;
+  border-radius: 4px;
+  border: none;
+  background-color: #000000;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  opacity: 0.9;
+}
