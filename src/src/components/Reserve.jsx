@@ -1,7 +1,7 @@
 // src/components/Reserve.jsx
 import { useState } from "react";
 import "./Reserve.css";
-import { useMeetings } from "./meetingsStore.jsx"; // ★ 這行很重要
+import { useMeetings } from "./meetingsStore.jsx";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 

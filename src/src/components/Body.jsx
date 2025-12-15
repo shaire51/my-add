@@ -33,8 +33,17 @@ export default function Body() {
           </h2>
 
           <div className="hero-row">
-            <dt>日期：</dt>
-            <dd>{main ? `${main.date} ${main.timeLabel}` : "—"}</dd>
+            <dd>
+              {main ? (
+                <>
+                  日期：{main.date}
+                  <br />
+                  時間：{main.timeLabel}
+                </>
+              ) : (
+                "—"
+              )}
+            </dd>
           </div>
 
           <div className="hero-detail">
