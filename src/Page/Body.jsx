@@ -1,12 +1,15 @@
 // src/components/Body.jsx
-import "./Body.css";
-import { useMeetings } from "./meetingsStore.jsx";
+import "../styles/Body.css";
+import { useMeetings } from "../stores/meetingsStore.jsx";
 
 export default function Body() {
-  // 從 store 拿會議資料
-  const { toRows } = useMeetings();
-  const rows = toRows();
-  const main = rows[0] || null; // 上面大卡顯示第一筆
+  // ✅ 同時拿：正在進行(active) + 全部排程(all)
+  const { toActiveRows, toUpcomingRows } = useMeetings();
+
+  const activeRows = toActiveRows(); // 只拿「正在進行」
+  const allRows = toUpcomingRows(); // ✅ 會議排程要顯示全部
+
+  const main = activeRows[0] || null; // 上面大卡顯示第一筆進行中
 
   const attachment = main?.attachments?.[0] || null;
   const isImage = attachment?.type?.startsWith("image/");
@@ -14,7 +17,7 @@ export default function Body() {
 
   return (
     <main className="main">
-      {/* ===== 上面大卡 ===== */}
+      {/* ===== 上面大卡（時間到才出現） ===== */}
       <section className="hero">
         <div className="hero-image">
           {isImage && (
@@ -81,15 +84,15 @@ export default function Body() {
         </div>
       </section>
 
-      {/* ===== 下面「會議排程」列表 ===== */}
+      {/* ===== 下面「會議排程」列表（顯示全部） ===== */}
       <section className="schedule">
         <h3 className="schedule-title">會議排程</h3>
 
         <div className="schedule-list">
-          {rows.length === 0 ? (
+          {allRows.length === 0 ? (
             <p className="schedule-empty">目前尚未有任何會議預約。</p>
           ) : (
-            rows.map((m) => (
+            allRows.map((m) => (
               <article className="schedule-card" key={m.id}>
                 <h4 className="schedule-card-title">{m.name}</h4>
                 <p className="schedule-line">主辦單位：{m.unit}</p>

@@ -1,5 +1,5 @@
-import { useMeetings } from "./meetingsStore.jsx";
-import "./admin.css";
+import { useMeetings } from "../stores/meetingsStore.jsx";
+import "../styles/admin.css";
 
 export default function Admin() {
   const { toRows, deleteMeeting } = useMeetings();

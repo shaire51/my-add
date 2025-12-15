@@ -1,12 +1,12 @@
 // src/App.jsx
-import "./App.css";
-import Nav from "./src/components/Nav.jsx";
-import Body from "./src/components/Body.jsx";
-import Reserve from "./src/components/Reserve.jsx";
-import Foot from "./src/components/Foot.jsx";
-import Admin from "./src/components/admin.jsx";
+import "./styles/App.css";
+import Nav from "./components/Nav.jsx";
+import Body from "./Page/Body.jsx";
+import Reserve from "./Page/Reserve.jsx";
+import Foot from "./components/Foot.jsx";
+import Admin from "./Page/admin.jsx";
+import Login from "./Page/login.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./src/components/login.jsx";
 
 function App() {
   return (

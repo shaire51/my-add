@@ -1,4 +1,4 @@
-import "./login.css";
+import "../styles/login.css";
 
 export default function Login() {
   const handleSubmit = (e) => {

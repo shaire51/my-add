@@ -1,5 +1,5 @@
 // src/components/Foot.jsx
-import "./Foot.css";
+import "../styles/Foot.css";
 
 export default function Foot() {
   return (

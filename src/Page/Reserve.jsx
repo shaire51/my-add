@@ -1,7 +1,7 @@
 // src/components/Reserve.jsx
 import { useState } from "react";
-import "./Reserve.css";
-import { useMeetings } from "./meetingsStore.jsx";
+import "../styles/Reserve.css";
+import { useMeetings } from "../stores/meetingsStore.jsx";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
@@ -63,7 +63,7 @@ function TimeSelect({ id, value, onChange }) {
 }
 
 export default function Reserve() {
-  const { addMeeting } = useMeetings();
+  const { addMeeting, canAddMeeting } = useMeetings();
 
   const [form, setForm] = useState({
     name: "",
@@ -111,6 +111,21 @@ export default function Reserve() {
       ];
     }
     try {
+      const check = canAddMeeting({
+        name: form.name.trim(),
+        unit: form.unit.trim(),
+        date: form.date,
+        start: form.start,
+        end: form.end,
+        people: form.people.trim(),
+        reporter: form.reporter.trim(),
+        place: form.place.trim(),
+      });
+      if (!check.ok) {
+        setMsg({ type: "error", text: check.message });
+        return;
+      }
+
       const payload = {
         name: form.name.trim(),
         unit: form.unit.trim(),
@@ -153,7 +168,7 @@ export default function Reserve() {
       });
 
       if (!ok) {
-        setMsg({ type: "error", text: error || "預約失敗（前端 store）" });
+        setMsg({ type: "error", text: error || "預約失敗，時間衝突" });
         return;
       }
 
