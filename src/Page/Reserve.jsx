@@ -92,12 +92,27 @@ export default function Reserve() {
     e.preventDefault();
     setMsg(null);
 
+    // 1️⃣ 必填欄位檢查
     if (!form.name || !form.date || !form.start || !form.end || !form.place) {
       setMsg({ type: "error", text: "請填寫必填欄位！" });
       return;
     }
 
-    // 處理附件（先給前端用來預覽，後端目前還沒存附件）
+    // 2️⃣ ⭐ 檔案格式檢查（一定要在讀檔前）
+    if (form.file) {
+      const allowedTypes = ["image/jpeg", "image/tiff"];
+      const allowedExt = ["jpg", "jpeg", "tif", "tiff", "png"];
+
+      const fileType = form.file.type; // 有些瀏覽器可能是 ""
+      const fileExt = form.file.name.split(".").pop().toLowerCase();
+
+      if (!allowedTypes.includes(fileType) && !allowedExt.includes(fileExt)) {
+        setMsg({ type: "error", text: "附件僅限 JPG 或 TIF 格式" });
+        return;
+      }
+    }
+
+    // 3️⃣ 處理附件（通過檢查後才讀）
     let attachments = [];
     if (form.file) {
       const dataUrl = await readFileAsDataURL(form.file);
@@ -110,7 +125,9 @@ export default function Reserve() {
         },
       ];
     }
+
     try {
+      // 4️⃣ 時段衝突檢查
       const check = canAddMeeting({
         name: form.name.trim(),
         unit: form.unit.trim(),
@@ -121,24 +138,22 @@ export default function Reserve() {
         reporter: form.reporter.trim(),
         place: form.place.trim(),
       });
+
       if (!check.ok) {
         setMsg({ type: "error", text: check.message });
         return;
       }
 
+      // 5️⃣ 送後端
       const payload = {
         name: form.name.trim(),
         unit: form.unit.trim(),
-        date: form.date, // DATE
-        start_time: form.start, // TIME
-        end_time: form.end, // TIME
+        date: form.date,
+        start_time: form.start,
+        end_time: form.end,
         people: form.people.trim(),
         reporter: form.reporter.trim(),
         place: form.place.trim(),
-        // 這三個先不傳，之後要做附件再一起改
-        // attachment_name: attachments[0]?.name || null,
-        // attachment_type: attachments[0]?.type || null,
-        // attachment_data: attachments[0]?.dataUrl || null,
       };
 
       const res = await fetch("http://localhost:3001/api/meetings", {
@@ -147,13 +162,11 @@ export default function Reserve() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        throw new Error("後端儲存失敗");
-      }
+      if (!res.ok) throw new Error("後端儲存失敗");
 
       const data = await res.json();
-      console.log("後端新增成功，ID =", data.id);
 
+      // 6️⃣ 寫入前端 store（含附件）
       const { ok, error } = addMeeting({
         id: data.id,
         name: form.name.trim(),
@@ -174,7 +187,7 @@ export default function Reserve() {
 
       setMsg({ type: "ok", text: "預約成功，已寫入資料庫並加入排程！" });
 
-      // 清空表單
+      // 7️⃣ 清空表單
       setForm({
         name: "",
         unit: "",
@@ -191,6 +204,7 @@ export default function Reserve() {
       setMsg({ type: "error", text: "預約失敗（後端無法儲存）" });
     }
   };
+
   return (
     <div className="reserve-page">
       {/* 上面大框 */}
@@ -271,7 +285,12 @@ export default function Reserve() {
 
           <div className="reserve-field">
             <label>附件上傳</label>
-            <input type="file" id="fileUpload" onChange={onChange} />
+            <input
+              type="file"
+              id="fileUpload"
+              accept=".jpg,.jpeg,.tif,.tiff,image/jpeg,image/tiff,.png"
+              onChange={onChange}
+            />
           </div>
 
           <button type="submit" className="reserve-submit">

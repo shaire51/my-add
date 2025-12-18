@@ -2,14 +2,25 @@
 import "../styles/Body.css";
 import { useMeetings } from "../stores/meetingsStore.jsx";
 
-export default function Body() {
+export default function Body({ previewFloor = null }) {
+  function isFloorPlace(place, floor) {
+    const p = String(place ?? "").trim();
+    if (floor === 2) return /二樓|2樓|2f/i.test(p);
+    if (floor === 5) return /五樓|5樓|5f/i.test(p);
+    return true;
+  }
   // ✅ 同時拿：正在進行(active) + 全部排程(all)
   const { toActiveRows, toUpcomingRows } = useMeetings();
 
-  const activeRows = toActiveRows(); // 只拿「正在進行」
-  const allRows = toUpcomingRows(); // ✅ 會議排程要顯示全部
+  const activeRowsAll = toActiveRows(); // 全部正在進行（不分樓層）
+  const allRows = toUpcomingRows(); // ✅ 下面排程：維持全部（混合）
 
-  const main = activeRows[0] || null; // 上面大卡顯示第一筆進行中
+  // ⭐ 大卡：有傳 previewFloor 就只取該樓層正在進行的會議
+  const activeRows = previewFloor
+    ? activeRowsAll.filter((m) => isFloorPlace(m.place, previewFloor))
+    : activeRowsAll;
+
+  const main = activeRows[0] || null;
 
   const attachment = main?.attachments?.[0] || null;
   const isImage = attachment?.type?.startsWith("image/");
@@ -67,20 +78,6 @@ export default function Body() {
               <dd>{main?.people || "—"}</dd>
             </div>
           </div>
-
-          {attachment ? (
-            <a
-              href={downloadHref}
-              download={attachment.name}
-              className="primary-btn download-link"
-            >
-              檔案下載
-            </a>
-          ) : (
-            <button className="primary-btn" disabled>
-              無附件可下載
-            </button>
-          )}
         </div>
       </section>
 
