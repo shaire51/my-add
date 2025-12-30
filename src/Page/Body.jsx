@@ -9,22 +9,20 @@ export default function Body({ previewFloor = null }) {
     if (floor === 5) return /五樓|5樓|5f/i.test(p);
     return true;
   }
-  // ✅ 同時拿：正在進行(active) + 全部排程(all)
+  // 同時拿：正在進行(active) + 全部排程(all)
   const { toActiveRows, toUpcomingRows } = useMeetings();
 
   const activeRowsAll = toActiveRows(); // 全部正在進行（不分樓層）
-  const allRows = toUpcomingRows(); // ✅ 下面排程：維持全部（混合）
+  const allRows = toUpcomingRows(); // 下面排程：維持全部（混合）
 
-  // ⭐ 大卡：有傳 previewFloor 就只取該樓層正在進行的會議
+  //  大卡：有傳 previewFloor 就只取該樓層正在進行的會議
   const activeRows = previewFloor
     ? activeRowsAll.filter((m) => isFloorPlace(m.place, previewFloor))
     : activeRowsAll;
 
   const main = activeRows[0] || null;
-
   const attachment = main?.attachments?.[0] || null;
   const isImage = attachment?.type?.startsWith("image/");
-  const downloadHref = attachment?.dataUrl || "#";
 
   return (
     <main className="main">

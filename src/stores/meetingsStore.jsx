@@ -135,19 +135,22 @@ export function MeetingsProvider({ children }) {
     return { ok: true };
   }
 
-  // 刪除會議（前端同步刪除）
+  // 刪除會議（前端同步刪除）admin
   function deleteMeeting(id) {
     setMeetings((prev) => prev.filter((m) => m.id !== id));
     return { ok: true };
   }
 
-  // 全部排序列表
+  // 排序列表 admin
   function toRows() {
-    return [...meetings].sort((a, b) =>
-      a.date === b.date
-        ? a.start.localeCompare(b.start)
-        : a.date.localeCompare(b.date)
-    );
+    const sorted = [...meetings].sort((a, b) => {
+      if (a.date === b.date) {
+        return a.start.localeCompare(b.start);
+      }
+      return a.date.localeCompare(b.date);
+    });
+
+    return sorted;
   }
 
   // 只回傳「正在進行中」
@@ -165,6 +168,13 @@ export function MeetingsProvider({ children }) {
         : a.date.localeCompare(b.date)
     );
   }
+  //body.jsx
+  function isFloorPlace(place, floor) {
+    const p = String(place ?? "").trim();
+    if (floor === 2) return /二樓|2樓|2f/i.test(p);
+    if (floor === 5) return /五樓|5樓|5f/i.test(p);
+    return true;
+  }
 
   const api = useMemo(
     () => ({
@@ -176,6 +186,7 @@ export function MeetingsProvider({ children }) {
       toRows,
       toActiveRows,
       toUpcomingRows,
+      isFloorPlace,
     }),
     [meetings, now]
   );

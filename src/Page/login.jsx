@@ -1,8 +1,36 @@
 import "../styles/login.css";
+import { useState } from "react";
 
 export default function Login() {
-  const handleSubmit = (e) => {
+  const [empId, setEmpId] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("http://localhost:3001/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ empId, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "登入失敗");
+        return;
+      }
+
+      localStorage.setItem("user", JSON.stringify(data.user));
+      window.location.href = "/";
+    } catch (err) {
+      setError("無法連線到伺服器");
+    }
   };
 
   return (
@@ -13,32 +41,30 @@ export default function Login() {
         <form className="login-form" onSubmit={handleSubmit}>
           {/* 員工編號 */}
           <div className="login-field">
-            <label htmlFor="empId" className="login-label">
-              員工編號：
-            </label>
+            <label className="login-label">員工編號</label>
             <input
-              id="empId"
-              type="text"
               className="login-input"
-              placeholder="您的員工帳號"
-              defaultValue=""
+              value={empId}
+              onChange={(e) => setEmpId(e.target.value)}
+              placeholder="員工編號"
             />
           </div>
 
-          {/* 員工密碼 */}
+          {/* 密碼 */}
           <div className="login-field">
-            <label htmlFor="empPassword" className="login-label">
-              員工密碼：
-            </label>
+            <label className="login-label">密碼</label>
             <input
-              id="empPassword"
               type="password"
               className="login-input"
-              placeholder="您的BMS密碼"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="密碼"
             />
           </div>
 
-          {/* 登入按鈕 */}
+          {/* 錯誤訊息 */}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+
           <button type="submit" className="login-button">
             登入
           </button>
