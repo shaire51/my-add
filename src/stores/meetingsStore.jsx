@@ -39,31 +39,59 @@ function hasConflict(newM, meetings) {
 }
 
 export function MeetingsProvider({ children }) {
-  const [meetings, setMeetings] = useState([]);
+  const [meetings, setMeetings] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("meetings_v1") || "[]");
+    } catch {
+      return [];
+    }
+  });
   const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    localStorage.setItem("meetings_v1", JSON.stringify(meetings));
+  }, [meetings]);
 
   // 初始化 → 從後端載入全部會議
   useEffect(() => {
     async function load() {
       try {
+        const local = meetings;
+
+        // 用「會議內容」當 key（因為後端 id 可能跟你本機 id 不同）
+        const makeKey = (m) =>
+          `${m.date}|${m.start || m.start_time}|${m.end || m.end_time}|${
+            m.place
+          }|${m.name}`;
+
+        const attachMap = new Map(
+          local.map((m) => [makeKey(m), m.attachments || []])
+        );
+
+        // 2) 從後端載入
         const res = await fetch("http://localhost:3001/api/meetings");
         const list = await res.json();
 
-        const converted = list.map((it) => ({
-          id: it.id,
-          name: it.name,
-          unit: it.unit,
-          date: it.date,
-          start: it.start_time,
-          end: it.end_time,
-          startMin: hhmmToMin(it.start_time),
-          endMin: hhmmToMin(it.end_time),
-          timeLabel: `${it.start_time}~${it.end_time}`,
-          people: it.people,
-          reporter: it.reporter,
-          place: it.place,
-          attachments: [],
-        }));
+        // 3) 轉換 + 把 attachments 接回來
+        const converted = list.map((it) => {
+          const key = `${it.date}|${it.start_time}|${it.end_time}|${it.place}|${it.name}`;
+          return {
+            id: it.id,
+            name: it.name,
+            unit: it.unit,
+            date: it.date,
+            start: it.start_time,
+            end: it.end_time,
+            startMin: hhmmToMin(it.start_time),
+            endMin: hhmmToMin(it.end_time),
+            timeLabel: `${it.start_time}~${it.end_time}`,
+            people: it.people,
+            reporter: it.reporter,
+            place: it.place,
+
+            // ✅ 不要再清空，改成從 localStorage 對回來
+            attachments: attachMap.get(key) ?? [],
+          };
+        });
 
         setMeetings(converted);
       } catch (err) {

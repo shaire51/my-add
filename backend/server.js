@@ -13,5 +13,5 @@ app.use("/api", authRoutes);
 app.use("/api/meetings", meetingRoutes);
 
 app.listen(3001, () => {
-  console.log("🚀 Server running on http://localhost:3001");
+  console.log(" Server running on http://localhost:3001");
 });

@@ -8,9 +8,8 @@ const pool = mysql.createPool({
   database: "meetings",
   timezone: "+08:00",
 });
-
-// 👇 要匯入的員工資料
-const employees = [{ emp_id: "41414", name: "王小明", password: "a9k99hj123" }];
+//  要匯入的員工資料
+const employees = [{ emp_id: "41414", name: "張文川", password: "a9k99hj123" }];
 
 async function seed() {
   try {
@@ -24,12 +23,12 @@ async function seed() {
           [emp.emp_id, emp.name, hash]
         );
 
-      console.log(`✅ 已新增員工 ${emp.emp_id}`);
+      console.log(` 已新增員工 ${emp.emp_id}`);
     }
-    console.log("🎉 全部匯入完成");
+    console.log(" 全部匯入完成");
     process.exit();
   } catch (err) {
-    console.error("❌ 匯入失敗", err);
+    console.error(" 匯入失敗", err);
     process.exit(1);
   }
 }

@@ -1,10 +1,14 @@
 import "../styles/login.css";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../stores/AuthContext.jsx";
 
 export default function Login() {
   const [empId, setEmpId] = useState("");
+  const { login } = useAuth();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,8 +30,8 @@ export default function Login() {
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(data.user));
-      window.location.href = "/";
+      login(data.user);
+      navigate("/reserve");
     } catch (err) {
       setError("無法連線到伺服器");
     }

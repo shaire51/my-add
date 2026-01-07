@@ -9,16 +9,16 @@ const pool = mysql
     database: "meetings",
     timezone: "+08:00",
   })
-  .promise(); // ⭐ 關鍵就在這行
+  .promise(); //  關鍵就在這行
 
 // 測試連線
 (async () => {
   try {
     const connection = await pool.getConnection();
-    console.log("✅ 資料庫連線成功");
+    console.log(" 資料庫連線成功");
     connection.release();
   } catch (err) {
-    console.error("❌ 資料庫連線失敗：", err);
+    console.error(" 資料庫連線失敗：", err);
   }
 })();
 

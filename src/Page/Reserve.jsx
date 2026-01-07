@@ -2,6 +2,7 @@
 import { useState } from "react";
 import "../styles/Reserve.css";
 import { useMeetings } from "../stores/meetingsStore.jsx";
+import { useAuth } from "../stores/AuthContext.jsx";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
@@ -64,14 +65,13 @@ function TimeSelect({ id, value, onChange }) {
 
 export default function Reserve() {
   const { addMeeting, canAddMeeting } = useMeetings();
-
+  const { user } = useAuth();
   const [form, setForm] = useState({
     name: "",
     unit: "",
     date: "",
     start: "",
     end: "",
-    reporter: "",
     people: "",
     place: "",
     file: null,
@@ -92,27 +92,27 @@ export default function Reserve() {
     e.preventDefault();
     setMsg(null);
 
-    // 1️⃣ 必填欄位檢查
+    // 必填欄位檢查
     if (!form.name || !form.date || !form.start || !form.end || !form.place) {
       setMsg({ type: "error", text: "請填寫必填欄位！" });
       return;
     }
 
-    // 2️⃣ ⭐ 檔案格式檢查（一定要在讀檔前）
+    //  檔案格式檢查（一定要在讀檔前）
     if (form.file) {
       const allowedTypes = ["image/jpeg", "image/tiff"];
       const allowedExt = ["jpg", "jpeg", "tif", "tiff", "png"];
 
-      const fileType = form.file.type; // 有些瀏覽器可能是 ""
+      const fileType = form.file.type;
       const fileExt = form.file.name.split(".").pop().toLowerCase();
 
       if (!allowedTypes.includes(fileType) && !allowedExt.includes(fileExt)) {
-        setMsg({ type: "error", text: "附件僅限 JPG 或 TIF 格式" });
+        setMsg({ type: "error", text: "附件僅限 JPG,TIF,png 格式" });
         return;
       }
     }
 
-    // 3️⃣ 處理附件（通過檢查後才讀）
+    //  處理附件（通過檢查後才讀）
     let attachments = [];
     if (form.file) {
       const dataUrl = await readFileAsDataURL(form.file);
@@ -127,7 +127,7 @@ export default function Reserve() {
     }
 
     try {
-      // 4️⃣ 時段衝突檢查
+      //  時段衝突檢查
       const check = canAddMeeting({
         name: form.name.trim(),
         unit: form.unit.trim(),
@@ -135,7 +135,7 @@ export default function Reserve() {
         start: form.start,
         end: form.end,
         people: form.people.trim(),
-        reporter: form.reporter.trim(),
+        reporter: user.name,
         place: form.place.trim(),
       });
 
@@ -144,7 +144,7 @@ export default function Reserve() {
         return;
       }
 
-      // 5️⃣ 送後端
+      //  送後端
       const payload = {
         name: form.name.trim(),
         unit: form.unit.trim(),
@@ -152,7 +152,7 @@ export default function Reserve() {
         start_time: form.start,
         end_time: form.end,
         people: form.people.trim(),
-        reporter: form.reporter.trim(),
+        reporter: user.name,
         place: form.place.trim(),
       };
 
@@ -166,7 +166,7 @@ export default function Reserve() {
 
       const data = await res.json();
 
-      // 6️⃣ 寫入前端 store（含附件）
+      //  寫入前端 store（含附件）
       const { ok, error } = addMeeting({
         id: data.id,
         name: form.name.trim(),
@@ -175,7 +175,6 @@ export default function Reserve() {
         start: form.start,
         end: form.end,
         people: form.people.trim(),
-        reporter: form.reporter.trim(),
         place: form.place.trim(),
         attachments,
       });
@@ -187,14 +186,12 @@ export default function Reserve() {
 
       setMsg({ type: "ok", text: "預約成功，已寫入資料庫並加入排程！" });
 
-      // 7️⃣ 清空表單
       setForm({
         name: "",
         unit: "",
         date: "",
         start: "",
         end: "",
-        reporter: "",
         people: "",
         place: "",
         file: null,
@@ -266,7 +263,7 @@ export default function Reserve() {
 
           <div className="reserve-field">
             <label>提報人</label>
-            <input id="reporter" value={form.reporter} onChange={onChange} />
+            <input value={user.name} readOnly />
           </div>
 
           <div className="reserve-field">
