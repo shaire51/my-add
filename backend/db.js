@@ -9,7 +9,7 @@ const pool = mysql
     database: "meetings",
     timezone: "+08:00",
   })
-  .promise(); //  關鍵就在這行
+  .promise();
 
 // 測試連線
 (async () => {

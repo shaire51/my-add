@@ -1,8 +1,10 @@
+// 匯入Hookㄋ
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+// 建立 Context 容器
 const MeetingsCtx = createContext(null);
 
-// 時間字串 → 分鐘
+// 將user的時間字串轉成分鐘
 function hhmmToMin(t) {
   if (!t) return null;
   const [h, m] = t.split(":").map(Number);
@@ -19,9 +21,9 @@ function hasConflict(newM, meetings) {
   const ne = hhmmToMin(newM.end);
   if (ns == null || ne == null || Number.isNaN(ns) || Number.isNaN(ne))
     return false;
-
+  //如何顯示true則衝突
   return meetings.some((m) => {
-    // 同一天
+    // 如果m.data 不等於 newM.data 則顯示false
     if (m.date !== newM.date) return false;
 
     // 同地點
@@ -118,7 +120,6 @@ export function MeetingsProvider({ children }) {
     if (endDt <= nowDt) {
       return { ok: false, message: "此時段已經過去，無法預約" };
     }
-    // 如果你想更嚴格：開始時間已過也不行（就算尚未結束）
     if (startDt <= nowDt) {
       return { ok: false, message: "開始時間已過，無法預約" };
     }
@@ -138,7 +139,7 @@ export function MeetingsProvider({ children }) {
     const nowDt = new Date();
     const upcoming = meetings.filter((m) => {
       const endDt = toDateTime(m.date, m.end);
-      return endDt > nowDt; // 還沒結束才顯示
+      return endDt > nowDt;
     });
 
     return upcoming.sort((a, b) =>

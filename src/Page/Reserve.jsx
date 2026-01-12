@@ -16,7 +16,7 @@ function readFileAsDataURL(file) {
   });
 }
 
-// 時間選擇器（08:00~18:55，每 5 分鐘）
+// 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
   const minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
@@ -79,13 +79,33 @@ export default function Reserve() {
 
   const [msg, setMsg] = useState(null);
 
-  const onChange = (e) => {
-    const { id, value, files } = e.target;
-    if (id === "fileUpload") {
-      setForm((p) => ({ ...p, file: files?.[0] ?? null }));
-    } else {
-      setForm((p) => ({ ...p, [id]: value }));
+  const handleFieldChange = (e) => {
+    const { id, value } = e.target;
+    setForm((p) => ({ ...p, [id]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const name = file.name.toLowerCase();
+    const ext = name.split(".").pop();
+
+    const allowedExt = ["jpg", "jpeg", "png", "tif", "tiff"];
+    const allowedMime = ["image/jpeg", "image/png", "image/tiff"];
+
+    const ok =
+      allowedExt.includes(ext) &&
+      (allowedMime.includes(file.type) || file.type === "");
+
+    if (!ok) {
+      alert("只能上傳 jpg/jpeg/png/tif/tiff 圖片檔");
+      e.target.value = "";
+      setForm((p) => ({ ...p, file: null }));
+      return;
     }
+
+    setForm((p) => ({ ...p, file })); // ✅ 存進 form.file
   };
 
   const onSubmit = async (e) => {
@@ -225,12 +245,12 @@ export default function Reserve() {
           <div className="reserve-row">
             <div className="reserve-field">
               <label>會議名稱</label>
-              <input id="name" value={form.name} onChange={onChange} />
+              <input id="name" value={form.name} onChange={handleFieldChange} />
             </div>
 
             <div className="reserve-field">
               <label>主辦單位</label>
-              <input id="unit" value={form.unit} onChange={onChange} />
+              <input id="unit" value={form.unit} onChange={handleFieldChange} />
             </div>
           </div>
 
@@ -240,7 +260,7 @@ export default function Reserve() {
               id="date"
               type="date"
               value={form.date}
-              onChange={onChange}
+              onChange={handleFieldChange}
             />
           </div>
 
@@ -268,12 +288,16 @@ export default function Reserve() {
 
           <div className="reserve-field">
             <label>參加人員</label>
-            <input id="people" value={form.people} onChange={onChange} />
+            <input
+              id="people"
+              value={form.people}
+              onChange={handleFieldChange}
+            />
           </div>
 
           <div className="reserve-field">
             <label>地點</label>
-            <select id="place" value={form.place} onChange={onChange}>
+            <select id="place" value={form.place} onChange={handleFieldChange}>
               <option value="">請選擇會議室</option>
               <option value="五樓會議室">五樓會議室</option>
               <option value="二樓會議室">二樓會議室</option>
@@ -285,8 +309,8 @@ export default function Reserve() {
             <input
               type="file"
               id="fileUpload"
-              accept=".jpg,.jpeg,.tif,.tiff,image/jpeg,image/tiff,.png"
-              onChange={onChange}
+              accept="image/jpeg,image/png,image/tiff,.jpg,.jpeg,.png,.tif,.tiff"
+              onChange={handleFileChange}
             />
           </div>
 

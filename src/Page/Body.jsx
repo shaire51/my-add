@@ -26,7 +26,7 @@ export default function Body({ previewFloor = null }) {
 
   return (
     <main className="main">
-      {/* ===== 上面大卡（時間到才出現） ===== */}
+      {/* 上面大卡（時間到才出現） */}
       <section className="hero">
         <div className="hero-image">
           {isImage && (
@@ -79,7 +79,7 @@ export default function Body({ previewFloor = null }) {
         </div>
       </section>
 
-      {/* ===== 下面「會議排程」列表（顯示全部） ===== */}
+      {/* 下面「會議排程」列表（顯示全部）*/}
       <section className="schedule">
         <h3 className="schedule-title">會議排程</h3>
 

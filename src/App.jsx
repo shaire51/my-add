@@ -22,11 +22,21 @@ function App() {
 
             <Routes>
               <Route path="/" element={<Body />} />
-              <Route
-                path="/reserve"
+              <Route //分配路徑
+                path="/reserve" //保護reserve
                 element={
+                  //導向
                   <ProtectedRoute>
                     <Reserve />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 }
               />
