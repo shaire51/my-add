@@ -1,5 +1,6 @@
 // src/components/Reserve.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Reserve.css";
 import { useMeetings } from "../stores/meetingsStore.jsx";
 import { useAuth } from "../stores/AuthContext.jsx";
@@ -19,7 +20,7 @@ function readFileAsDataURL(file) {
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
-  const minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+  const minutes = [0, 1, 30, 31];
 
   const h = value ? Number(value.split(":")[0]) : "";
   const m = value ? Number(value.split(":")[1]) : "";
@@ -64,9 +65,14 @@ function TimeSelect({ id, value, onChange }) {
 }
 
 export default function Reserve() {
-  const { addMeeting, canAddMeeting } = useMeetings();
+  const { addMeeting, updateMeeting, canAddMeeting } = useMeetings();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const editMeeting = location.state?.editMeeting || null;
+  const editingId = editMeeting?.id || null;
   const [form, setForm] = useState({
+    id: null,
     name: "",
     unit: "",
     date: "",
@@ -78,7 +84,22 @@ export default function Reserve() {
   });
 
   const [msg, setMsg] = useState(null);
+  useEffect(() => {
+    if (!editMeeting) return;
 
+    setForm((p) => ({
+      ...p,
+      id: editMeeting.id,
+      name: editMeeting.name ?? "",
+      unit: editMeeting.unit ?? "",
+      date: editMeeting.date ?? "",
+      start: editMeeting.start ?? editMeeting.start_time ?? "",
+      end: editMeeting.end ?? editMeeting.end_time ?? "",
+      people: editMeeting.people ?? "",
+      place: editMeeting.place ?? "",
+      file: null, // 編輯時先不帶舊檔，需使用者重新選
+    }));
+  }, [editMeeting]);
   const handleFieldChange = (e) => {
     const { id, value } = e.target;
     setForm((p) => ({ ...p, [id]: value }));
@@ -110,6 +131,7 @@ export default function Reserve() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    const isEdit = !!form.id;
     setMsg(null);
 
     // 必填欄位檢查
@@ -149,6 +171,7 @@ export default function Reserve() {
     try {
       //  時段衝突檢查
       const check = canAddMeeting({
+        id: form.id,
         name: form.name.trim(),
         unit: form.unit.trim(),
         date: form.date,
@@ -176,46 +199,86 @@ export default function Reserve() {
         place: form.place.trim(),
       };
 
-      const res = await fetch("http://localhost:3001/api/meetings", {
-        method: "POST",
+      const API_BASE = "http://192.168.76.165:3001";
+
+      const url = isEdit
+        ? `${API_BASE}/api/meetings/${form.id}`
+        : `${API_BASE}/api/meetings`;
+
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("後端儲存失敗");
+      const data = await res.json().catch(() => ({}));
 
-      const data = await res.json();
-
-      //  寫入前端 store（含附件）
-      const { ok, error } = addMeeting({
-        id: data.id,
-        name: form.name.trim(),
-        unit: form.unit.trim(),
-        date: form.date,
-        start: form.start,
-        end: form.end,
-        people: form.people.trim(),
-        place: form.place.trim(),
-        attachments,
-      });
-
-      if (!ok) {
-        setMsg({ type: "error", text: error || "預約失敗，時間衝突" });
+      if (!res.ok) {
+        console.error("API error:", res.status, data);
+        setMsg({
+          type: "error",
+          text:
+            data.message ||
+            (isEdit
+              ? `後端更新失敗(${res.status})`
+              : `後端儲存失敗(${res.status})`),
+        });
         return;
       }
 
-      setMsg({ type: "ok", text: "預約成功，已寫入資料庫並加入排程！" });
+      //  寫入前端 store（含附件）
+      if (!isEdit) {
+        // ✅ 新增才寫入 store
+        const { ok, error } = addMeeting({
+          id: data.id,
+          name: form.name.trim(),
+          unit: form.unit.trim(),
+          date: form.date,
+          start: form.start,
+          end: form.end,
+          people: form.people.trim(),
+          place: form.place.trim(),
+          attachments,
+        });
 
-      setForm({
-        name: "",
-        unit: "",
-        date: "",
-        start: "",
-        end: "",
-        people: "",
-        place: "",
-        file: null,
-      });
+        if (!ok) {
+          setMsg({ type: "error", text: error || "預約失敗，時間衝突" });
+          return;
+        }
+
+        setMsg({ type: "ok", text: "預約成功，已寫入資料庫並加入排程！" });
+
+        setForm({
+          id: null,
+          name: "",
+          unit: "",
+          date: "",
+          start: "",
+          end: "",
+          people: "",
+          place: "",
+          file: null,
+        });
+      } else {
+        // ✅ 編輯成功：更新 store 這筆資料
+        updateMeeting({
+          id: form.id,
+          name: form.name.trim(),
+          unit: form.unit.trim(),
+          date: form.date,
+          start: form.start,
+          end: form.end,
+          start_time: form.start, // 若你別處用 start_time 也一起帶
+          end_time: form.end,
+          people: form.people.trim(),
+          place: form.place.trim(),
+          reporter: user.name,
+        });
+
+        setMsg({ type: "ok", text: "更新成功！" });
+        navigate("/admin");
+        return;
+      }
     } catch (err) {
       console.error(err);
       setMsg({ type: "error", text: "預約失敗（後端無法儲存）" });
@@ -315,7 +378,7 @@ export default function Reserve() {
           </div>
 
           <button type="submit" className="reserve-submit">
-            送出預約
+            {form.id ? "儲存修改" : "送出預約"}
           </button>
 
           {msg && <p className={`msg ${msg.type}`}>{msg.text}</p>}

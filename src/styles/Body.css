@@ -2,38 +2,49 @@
 
 .main {
   flex: 1;
-  padding: 40px 80px 40px;
+  padding: clamp(14px, 3vw, 40px) clamp(12px, 4vw, 80px);
   display: flex;
   flex-direction: column;
 }
 
 /* 上半部：圖片 + 會議資訊 */
 
+/*左右（圖片左、資訊右） */
 .hero {
   display: flex;
-  grid-template-columns: 430px 1fr;
   gap: 40px;
   align-items: start;
-  margin-bottom: 40px;
-  margin: 0 auto;
+  margin: 0 auto 40px;
 }
 
 .hero-image {
-  width: auto;
-  height: auto;
-  border-radius: 8px;
+  flex: 0 0 430px;
+  min-height: 260px;
+  border-radius: 12px;
   position: relative;
-  background: #eeeeee00;
+  background: #f6f6f6;
 
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .hero-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.hero-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  display: block;
 }
 
 .hero-title {
@@ -58,7 +69,31 @@
   gap: 6px;
 }
 
-/* 讓你自由改文字顏色 + 描邊 */
+/* RWD：上下，且「資訊在上、圖片在下」 */
+@media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .hero-info {
+    order: 1; /*  資訊在上 */
+  }
+
+  .hero-image {
+    order: 2; /* 圖片在下 */
+    flex: none;
+    width: 100%;
+    min-height: 220px;
+  }
+
+  .primary-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+}
+
+/* 自由改文字顏色 + 描邊 */
 .hero-color {
   color: #777;
 }
@@ -114,16 +149,24 @@
   font-size: 14px;
 }
 
-.hero-img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  object-position: center;
-}
-
 .download-link {
   text-decoration: none;
   color: #fff;
+}
+
+/*  沒有圖片時：文字置中（搭配 <section className="hero no-image">） */
+.hero.no-image {
+  justify-content: center;
+}
+
+.hero.no-image .hero-info {
+  align-items: center; /* 區塊置中 */
+  text-align: center; /* 文字置中 */
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hero.no-image .hero-detail,
+.hero.no-image .hero-row {
+  justify-content: center;
 }

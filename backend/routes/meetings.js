@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("❌ 讀取會議失敗:", err);
+    console.error(" 讀取會議失敗:", err);
     res.status(500).json({ message: "資料庫錯誤" });
   }
 });
@@ -39,7 +39,7 @@ router.post("/", async (req, res) => {
       (name, unit, date, start_time, end_time, people, reporter, place)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [name, unit, date, start_time, end_time, people, reporter, place]
+      [name, unit, date, start_time, end_time, people, reporter, place],
     );
 
     res.status(201).json({
@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
       id: result.insertId,
     });
   } catch (err) {
-    console.error("❌ 新增失敗:", err);
+    console.error(" 新增失敗:", err);
     res.status(500).json({ message: "資料庫錯誤" });
   }
 });
@@ -65,8 +65,34 @@ router.delete("/:id", async (req, res) => {
 
     res.json({ message: "刪除成功" });
   } catch (err) {
-    console.error("❌ 刪除失敗:", err);
+    console.error(" 刪除失敗:", err);
     res.status(500).json({ message: "資料庫錯誤" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, unit, date, start_time, end_time, people, reporter, place } =
+    req.body;
+
+  if (!id) return res.status(400).json({ message: "id 不正確" });
+
+  try {
+    const [result] = await pool.query(
+      `UPDATE meetings
+       SET name=?, unit=?, date=?, start_time=?, end_time=?, people=?, reporter=?, place=?
+       WHERE id=?`,
+      [name, unit, date, start_time, end_time, people, reporter, place, id],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "找不到這筆會議" });
+    }
+
+    res.json({ ok: true, id });
+  } catch (err) {
+    console.error(" 更新失敗:", err);
+    res.status(500).json({ message: "更新失敗（資料庫錯誤）" });
   }
 });
 

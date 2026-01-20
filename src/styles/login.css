@@ -5,7 +5,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 80px 16px; /* 跟截圖一樣有點留白 */
+  padding: 80px 16px;
   box-sizing: border-box;
 }
 
@@ -42,7 +42,7 @@
   gap: 8px;
 }
 
-/* 標籤文字：員工編號/員工密碼 */
+/* 標籤文字 */
 .login-label {
   font-size: 14px;
 }
@@ -56,6 +56,7 @@
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .login-input:focus {
@@ -77,4 +78,46 @@
 
 .login-button:hover {
   opacity: 0.9;
+}
+
+/* ===== 密碼 input 內 icon ===== */
+.pw-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.pw-input {
+  padding-right: 52px; /* 右側留空給 icon */
+}
+
+.pw-icon-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #111; /* react-icons/emoji 都會吃 currentColor */
+  opacity: 0.9;
+}
+
+.pw-icon-btn:hover {
+  opacity: 1;
+}
+
+.pw-icon-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }

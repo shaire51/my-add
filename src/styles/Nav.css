@@ -1,76 +1,87 @@
 /* 導覽列 -------------------------------------------------- */
 
+:root {
+  --nav-pad-x: clamp(12px, 3vw, 80px);
+  --nav-h: clamp(56px, 8vw, 80px);
+  --gap: clamp(10px, 2vw, 30px);
+}
+
 .nav {
-  height: 80px;
+  min-height: var(--nav-h);
   background: #ffffff;
   border-bottom: 1px solid #e0e0e0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 80px;
-}
 
-.logo {
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.nav-center {
-  display: flex;
-  gap: 30px;
-  color: black;
+  padding: 0 var(--nav-pad-x);
+  gap: var(--gap);
+  flex-wrap: wrap; /*  小螢幕允許換行避免爆版 */
 }
 
 .nav a {
   color: #000;
-  text-decoration: none; /* 如果不要底線 */
+  text-decoration: none;
+}
+
+.nav-center {
+  display: flex;
+  gap: var(--gap);
+  color: black;
+  flex-wrap: wrap; /*  連結可換行 */
+  justify-content: center;
 }
 
 .nav-link {
   border: none;
   background: none;
-  font-size: 16px;
+  font-size: clamp(14px, 1.4vw, 16px); /*  字體可縮放 */
   cursor: pointer;
+  padding: 8px 10px; /*  增加可點擊範圍 */
+  border-radius: 10px;
 }
 
 .nav-link:hover {
   text-decoration: underline;
 }
 
+/* 你這邊原本 login-btn 顏色設定有點怪：背景黑但字也黑，看不到
+   我幫你改成白字（如果你要維持黑字，background 就別用黑） */
 .nav-right .login-btn {
-  padding: 10px 30px;
+  padding: 10px 22px;
   border-radius: 999px;
   border: 1px solid #000;
   background: #000;
-  color: #000000;
+  color: #fff; /*  修正可讀性 */
   font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .logo {
-  height: 75px;
+  height: clamp(44px, 6vw, 75px);
   cursor: pointer;
 }
 
-.nav-user {
-  font-weight: 800;
-  color: #333;
-}
-
+/* 使用者下拉 */
 .nav-user-wrapper {
   position: relative;
   cursor: pointer;
   height: 50px;
+  display: flex;
+  align-items: center;
 }
 
 .nav-user {
   font-weight: 800;
   color: #333;
+  white-space: nowrap;
 }
 
 .nav-dropdown {
   position: absolute;
-  top: 28px;
+  top: calc(100% + 6px); /*  比 28px 更穩，不會因字體/高度變動出錯 */
   right: 0;
   background: white;
   border: 1px solid #ddd;
@@ -78,12 +89,48 @@
   min-width: 150px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   z-index: 10;
+  overflow: hidden;
 }
 
 .nav-dropdown button {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: none;
   background: none;
   cursor: pointer;
+  text-align: left;
+}
+
+.nav-dropdown button:hover {
+  background: #f5f5f5;
+}
+
+/*  手機：改成上下排列，左右置中，連結更好點 */
+@media (max-width: 768px) {
+  .nav {
+    justify-content: center;
+    padding: 10px var(--nav-pad-x);
+  }
+
+  /* 假設你的 JSX 有 nav-left / nav-right 容器（沒有也不會壞） */
+  .nav-left,
+  .nav-right {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .nav-center {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nav-right .login-btn {
+    width: min(320px, 90%);
+  }
+
+  .nav-dropdown {
+    right: 50%;
+    transform: translateX(50%);
+  }
 }

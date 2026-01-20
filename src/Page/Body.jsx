@@ -9,13 +9,14 @@ export default function Body({ previewFloor = null }) {
     if (floor === 5) return /五樓|5樓|5f/i.test(p);
     return true;
   }
+
   // 同時拿：正在進行(active) + 全部排程(all)
   const { toActiveRows, toUpcomingRows } = useMeetings();
 
   const activeRowsAll = toActiveRows(); // 全部正在進行（不分樓層）
   const allRows = toUpcomingRows(); // 下面排程：維持全部（混合）
 
-  //  大卡：有傳 previewFloor 就只取該樓層正在進行的會議
+  // 大卡：有傳 previewFloor 就只取該樓層正在進行的會議
   const activeRows = previewFloor
     ? activeRowsAll.filter((m) => isFloorPlace(m.place, previewFloor))
     : activeRowsAll;
@@ -23,25 +24,26 @@ export default function Body({ previewFloor = null }) {
   const main = activeRows[0] || null;
   const attachment = main?.attachments?.[0] || null;
   const isImage = attachment?.type?.startsWith("image/");
+  const hasImage = Boolean(isImage && attachment?.dataUrl);
 
   return (
     <main className="main">
-      {/* 上面大卡（時間到才出現） */}
-      <section className="hero">
-        <div className="hero-image">
-          {isImage && (
+      {/* 上面大卡 */}
+      <section className={`hero ${!hasImage ? "no-image" : ""}`}>
+        {/* 有圖片才渲染圖片區塊（沒圖就不佔位） */}
+        {hasImage && (
+          <div className="hero-image">
             <img
               src={attachment.dataUrl}
               alt={attachment.name}
               className="hero-img"
             />
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="hero-info">
           <h2 className="hero-title">
-            會議名稱：
-            <span>{main ? main.name : "目前尚無會議"}</span>
+            會議名稱：<span>{main ? main.name : "目前尚無會議"}</span>
           </h2>
 
           <div className="hero-row">
@@ -79,7 +81,7 @@ export default function Body({ previewFloor = null }) {
         </div>
       </section>
 
-      {/* 下面「會議排程」列表（顯示全部）*/}
+      {/* 下面「會議排程」列表（顯示全部） */}
       <section className="schedule">
         <h3 className="schedule-title">會議排程</h3>
 

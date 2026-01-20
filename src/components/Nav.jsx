@@ -38,7 +38,7 @@ export default function Nav() {
             onMouseEnter={() => setShowMenu(true)}
             onMouseLeave={() => setShowMenu(false)}
           >
-            <span className="nav-user">歡迎回來，{user.name} ▾</span>
+            <span className="nav-user">您好，{user.name} ▾</span>
 
             {showMenu && (
               <div className="nav-dropdown">

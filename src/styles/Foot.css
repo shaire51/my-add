@@ -36,8 +36,8 @@
 
 .footer img {
   position: absolute;
-  bottom: 0; /* ⭐ 貼齊 footer 底部 */
-  right: 0; /* ⭐ 貼齊 footer 右側 */
+  bottom: 0; /*  貼齊 footer 底部 */
+  right: 0; /*  貼齊 footer 右側 */
   width: 120px; /* 你可調整大小 */
   height: auto;
   pointer-events: none;

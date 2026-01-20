@@ -66,7 +66,7 @@ export function MeetingsProvider({ children }) {
           }|${m.name}`;
 
         const attachMap = new Map(
-          local.map((m) => [makeKey(m), m.attachments || []])
+          local.map((m) => [makeKey(m), m.attachments || []]),
         );
 
         // 2) 從後端載入
@@ -90,7 +90,7 @@ export function MeetingsProvider({ children }) {
             reporter: it.reporter,
             place: it.place,
 
-            // ✅ 不要再清空，改成從 localStorage 對回來
+            //  不要再清空，改成從 localStorage 對回來
             attachments: attachMap.get(key) ?? [],
           };
         });
@@ -110,7 +110,7 @@ export function MeetingsProvider({ children }) {
     return () => clearInterval(timer);
   }, []);
 
-  // ✅ 只檢查，不寫入
+  //  只檢查，不寫入
   function canAddMeeting(m) {
     const startDt = toDateTime(m.date, m.start);
     const endDt = toDateTime(m.date, m.end);
@@ -145,7 +145,7 @@ export function MeetingsProvider({ children }) {
     return upcoming.sort((a, b) =>
       a.date === b.date
         ? a.start.localeCompare(b.start)
-        : a.date.localeCompare(b.date)
+        : a.date.localeCompare(b.date),
     );
   }
   // 新增會議（加入前端 store）
@@ -194,9 +194,32 @@ export function MeetingsProvider({ children }) {
     return active.sort((a, b) =>
       a.date === b.date
         ? a.start.localeCompare(b.start)
-        : a.date.localeCompare(b.date)
+        : a.date.localeCompare(b.date),
     );
   }
+
+  function updateMeeting(updated) {
+    setMeetings((prev) =>
+      prev.map((m) => {
+        if (m.id !== updated.id) return m;
+
+        const start = updated.start ?? m.start;
+        const end = updated.end ?? m.end;
+
+        return {
+          ...m,
+          ...updated,
+          // ✅ 同步維護衝突檢查/顯示會用到的欄位
+          start,
+          end,
+          startMin: hhmmToMin(start),
+          endMin: hhmmToMin(end),
+          timeLabel: `${start}~${end}`,
+        };
+      }),
+    );
+  }
+
   //body.jsx
   function isFloorPlace(place, floor) {
     const p = String(place ?? "").trim();
@@ -216,8 +239,9 @@ export function MeetingsProvider({ children }) {
       toActiveRows,
       toUpcomingRows,
       isFloorPlace,
+      updateMeeting,
     }),
-    [meetings, now]
+    [meetings, now],
   );
 
   return <MeetingsCtx.Provider value={api}>{children}</MeetingsCtx.Provider>;

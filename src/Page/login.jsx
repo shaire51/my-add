@@ -2,11 +2,13 @@ import "../styles/login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../stores/AuthContext.jsx";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Login() {
   const [empId, setEmpId] = useState("");
   const { login } = useAuth();
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -17,9 +19,7 @@ export default function Login() {
     try {
       const res = await fetch("http://localhost:3001/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ empId, password }),
       });
 
@@ -43,7 +43,6 @@ export default function Login() {
         <h2 className="login-title">員工登入系統</h2>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          {/* 員工編號 */}
           <div className="login-field">
             <label className="login-label">員工編號</label>
             <input
@@ -54,19 +53,30 @@ export default function Login() {
             />
           </div>
 
-          {/* 密碼 */}
           <div className="login-field">
             <label className="login-label">密碼</label>
-            <input
-              type="password"
-              className="login-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="密碼"
-            />
+
+            <div className="pw-input-wrap">
+              <input
+                type={showPw ? "text" : "password"}
+                className="login-input pw-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="密碼"
+              />
+
+              <button
+                type="button"
+                className="pw-icon-btn"
+                onClick={() => setShowPw((v) => !v)}
+                aria-label={showPw ? "隱藏密碼" : "顯示密碼"}
+                title={showPw ? "隱藏" : "顯示"}
+              >
+                {showPw ? <FiEye /> : <FiEyeOff />}
+              </button>
+            </div>
           </div>
 
-          {/* 錯誤訊息 */}
           {error && <p style={{ color: "red" }}>{error}</p>}
 
           <button type="submit" className="login-button">
