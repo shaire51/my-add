@@ -20,7 +20,7 @@ function readFileAsDataURL(file) {
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
-  const minutes = [0, 1, 30, 31];
+  const minutes = [0, 1, 15, 30, 31];
 
   const h = value ? Number(value.split(":")[0]) : "";
   const m = value ? Number(value.split(":")[1]) : "";
@@ -236,6 +236,7 @@ export default function Reserve() {
           date: form.date,
           start: form.start,
           end: form.end,
+          reporter: user.name,
           people: form.people.trim(),
           place: form.place.trim(),
           attachments,

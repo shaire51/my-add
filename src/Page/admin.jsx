@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Admin() {
   //引入 useMeetings functuin
-  const { toRows, deleteMeeting } = useMeetings();
-  //將 meetingsStore 裡面的toRows 變成rows參數使用
-  const rows = toRows();
+  const { toNotStartedRows, deleteMeeting } = useMeetings();
+  const rows = toNotStartedRows();
   const navigate = useNavigate();
 
   const handleEdit = (m) => {

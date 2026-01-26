@@ -11,7 +11,7 @@ export default function Body({ previewFloor = null }) {
   }
 
   // 同時拿：正在進行(active) + 全部排程(all)
-  const { toActiveRows, toUpcomingRows } = useMeetings();
+  const { toActiveRows, toUpcomingRows, weekdayZh } = useMeetings();
 
   const activeRowsAll = toActiveRows(); // 全部正在進行（不分樓層）
   const allRows = toUpcomingRows(); // 下面排程：維持全部（混合）
@@ -28,9 +28,7 @@ export default function Body({ previewFloor = null }) {
 
   return (
     <main className="main">
-      {/* 上面大卡 */}
       <section className={`hero ${!hasImage ? "no-image" : ""}`}>
-        {/* 有圖片才渲染圖片區塊（沒圖就不佔位） */}
         {hasImage && (
           <div className="hero-image">
             <img
@@ -50,7 +48,7 @@ export default function Body({ previewFloor = null }) {
             <dd>
               {main ? (
                 <>
-                  日期：{main.date}
+                  日期：{main.date}（{weekdayZh(main.date)}）
                   <br />
                   時間：{main.timeLabel}
                 </>
@@ -81,9 +79,8 @@ export default function Body({ previewFloor = null }) {
         </div>
       </section>
 
-      {/* 下面「會議排程」列表（顯示全部） */}
       <section className="schedule">
-        <h3 className="schedule-title">會議排程</h3>
+        <h3 className="schedule-title">會議排程（近７天會議）</h3>
 
         <div className="schedule-list">
           {allRows.length === 0 ? (
@@ -91,14 +88,28 @@ export default function Body({ previewFloor = null }) {
           ) : (
             allRows.map((m) => (
               <article className="schedule-card" key={m.id}>
-                <h4 className="schedule-card-title">{m.name}</h4>
-                <p className="schedule-line">主辦單位：{m.unit}</p>
-                <p className="schedule-line">提報人：{m.reporter}</p>
-                <p className="schedule-line">
-                  日期：{m.date} {m.timeLabel}
-                </p>
-                <p className="schedule-line">地點：{m.place}</p>
-                <p className="schedule-line">參與人員：{m.people}</p>
+                <div className="schedule-info">
+                  <div className="schedule-col title">
+                    <h4 className="schedule-card-title">會議名稱：{m.name}</h4>
+                    <p className="schedule-line">主辦：{m.unit}</p>
+                  </div>
+
+                  <div className="schedule-col time">
+                    <p className="schedule-line">
+                      日期：{m.date}（{weekdayZh(m.date)}）
+                    </p>
+                    <p className="schedule-line">時間：{m.timeLabel}</p>
+                  </div>
+
+                  <div className="schedule-col meta">
+                    <p className="schedule-line">提報人：{m.reporter}</p>
+                    <p className="schedule-line">地點：{m.place}</p>
+                  </div>
+
+                  <div className="schedule-col people">
+                    <p className="schedule-line">參與：{m.people}</p>
+                  </div>
+                </div>
               </article>
             ))
           )}

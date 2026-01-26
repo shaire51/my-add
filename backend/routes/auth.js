@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const pool = require("../db");
 
-const router = express.Router(); // ⭐ 這行一定要有
+const router = express.Router();
 
 router.post("/login", async (req, res) => {
   const { empId, password } = req.body;
@@ -14,7 +14,7 @@ router.post("/login", async (req, res) => {
   try {
     const [rows] = await pool.query(
       "SELECT * FROM employees WHERE emp_id = ?",
-      [empId]
+      [empId],
     );
 
     if (rows.length === 0) {

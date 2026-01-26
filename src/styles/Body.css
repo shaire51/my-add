@@ -120,53 +120,81 @@
 
 /* 會議排程 -------------------------------------------------- */
 
-.schedule-title {
-  font-size: 18px;
-  margin: 8px 0 16px;
-}
-
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .schedule-card {
   background: #ffffff;
   border-radius: 18px;
-  padding: 18px 22px;
+  padding: 18px 50px;
   border: 1px solid #c9c9c9;
+  margin-bottom: 10px;
 }
 
+/* 預設：完全橫向、不換行 */
+.schedule-info {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  gap: 28px;
+}
+
+/*  每欄：固定不換行 */
+.schedule-col {
+  display: flex;
+  margin: auto;
+}
+
+/* 欄位寬度建議固定，排版會很整齊 */
+.schedule-col.title {
+  width: 300px;
+}
+.schedule-col.time {
+  width: 400px;
+}
+.schedule-col.meta {
+  width: 400px;
+}
+
+.schedule-col.meta {
+  width: 400px;
+}
+
+.schedule-line,
 .schedule-card-title {
-  margin: 0 0 4px;
+  margin: 0;
+  width: 300px;
+}
+
+.schedule-col.people {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 600px;
 }
 
-.schedule-line {
-  margin: 2px 0;
-  font-size: 14px;
-}
+/* ✅ RWD：螢幕變窄才允許換行或改直排 */
+@media (max-width: 900px) {
+  .schedule-info {
+    flex-wrap: wrap; /* 開始換行 */
+    overflow: visible;
+  }
 
-.download-link {
-  text-decoration: none;
-  color: #fff;
-}
+  .schedule-col {
+    white-space: normal; /* 允許換行 */
+  }
 
-/*  沒有圖片時：文字置中（搭配 <section className="hero no-image">） */
-.hero.no-image {
-  justify-content: center;
-}
+  .schedule-line,
+  .schedule-card-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 
-.hero.no-image .hero-info {
-  align-items: center; /* 區塊置中 */
-  text-align: center; /* 文字置中 */
-  max-width: 720px;
-  margin: 0 auto;
-}
+  /* RWD 時欄位改成自適應 */
+  .schedule-col.title,
+  .schedule-col.time,
+  .schedule-col.meta {
+    width: auto;
+    flex: 1 1 240px;
+  }
 
-.hero.no-image .hero-detail,
-.hero.no-image .hero-row {
-  justify-content: center;
+  .schedule-col.people {
+    flex: 1 1 100%;
+  }
 }

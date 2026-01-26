@@ -137,9 +137,21 @@ export function MeetingsProvider({ children }) {
 
   function toUpcomingRows() {
     const nowDt = new Date();
+
+    // ✅ 只顯示「未來 7 天內」(含今天)
+    const until = new Date(nowDt.getTime() + 7 * 24 * 60 * 60 * 1000);
+
     const upcoming = meetings.filter((m) => {
+      const startDt = toDateTime(m.date, m.start);
       const endDt = toDateTime(m.date, m.end);
-      return endDt > nowDt;
+
+      // 仍未結束
+      if (endDt <= nowDt) return false;
+
+      // 在未來 7 天內（用開始時間判斷）
+      if (startDt > until) return false;
+
+      return true;
     });
 
     return upcoming.sort((a, b) =>
@@ -148,6 +160,23 @@ export function MeetingsProvider({ children }) {
         : a.date.localeCompare(b.date),
     );
   }
+  //過濾版會議編輯
+  function toNotStartedRows() {
+    const nowDt = new Date();
+
+    const list = meetings.filter((m) => {
+      if (!m.date || !m.end) return false; // 需要 end
+      const endDt = toDateTime(m.date, m.end);
+      return endDt > nowDt; // ✅ 還沒結束就顯示（結束才消失）
+    });
+
+    return list.sort((a, b) =>
+      a.date === b.date
+        ? a.start.localeCompare(b.start)
+        : a.date.localeCompare(b.date),
+    );
+  }
+
   // 新增會議（加入前端 store）
   function addMeeting(m) {
     const check = canAddMeeting(m);
@@ -184,11 +213,19 @@ export function MeetingsProvider({ children }) {
 
   // 只回傳「正在進行中」
   function toActiveRows() {
+    const EARLY_MIN = 15;
+    const EARLY_MS = EARLY_MIN * 60 * 1000;
+
     const active = meetings.filter((m) => {
       if (!m.date || !m.start || !m.end) return false;
+
       const startDt = toDateTime(m.date, m.start);
       const endDt = toDateTime(m.date, m.end);
-      return now >= startDt && now < endDt;
+
+      // ✅ 開始前 15 分鐘就算要顯示在上面大卡
+      const showFrom = new Date(startDt.getTime() - EARLY_MS);
+
+      return now >= showFrom && now < endDt;
     });
 
     return active.sort((a, b) =>
@@ -228,6 +265,14 @@ export function MeetingsProvider({ children }) {
     return true;
   }
 
+  //星期幾
+  function weekdayZh(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(`${dateStr}T00:00:00`); // 避免時區解析偏一天
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("zh-TW", { weekday: "short" }); // 例：週三
+  }
+
   const api = useMemo(
     () => ({
       meetings,
@@ -240,6 +285,8 @@ export function MeetingsProvider({ children }) {
       toUpcomingRows,
       isFloorPlace,
       updateMeeting,
+      weekdayZh,
+      toNotStartedRows,
     }),
     [meetings, now],
   );
