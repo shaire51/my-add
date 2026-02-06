@@ -8,6 +8,7 @@ body,
 
 body {
   margin: 0;
+  overflow-x: hidden;
 }
 
 /* 整個畫面外框 */

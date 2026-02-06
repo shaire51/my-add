@@ -1,4 +1,4 @@
-// 匯入Hookㄋ
+// 匯入Hook
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 // 建立 Context 容器
@@ -49,6 +49,7 @@ export function MeetingsProvider({ children }) {
     }
   });
   const [now, setNow] = useState(() => new Date());
+  const rooms = ["五樓會議室", "二樓會議室"];
   useEffect(() => {
     localStorage.setItem("meetings_v1", JSON.stringify(meetings));
   }, [meetings]);
@@ -130,7 +131,15 @@ export function MeetingsProvider({ children }) {
       return { ok: false, message: "結束時間必須晚於開始時間" };
     }
     if (hasConflict(m, meetings)) {
-      return { ok: false, message: "此會議室在該時段已有會議，無法預約" };
+      const place = String(m.place ?? "").trim();
+
+      const alternatives = rooms.filter((r) => r !== place);
+
+      return {
+        ok: false,
+        message: "此會議室在該時段已有會議，無法預約",
+        alternatives,
+      };
     }
     return { ok: true };
   }
@@ -167,7 +176,7 @@ export function MeetingsProvider({ children }) {
     const list = meetings.filter((m) => {
       if (!m.date || !m.end) return false; // 需要 end
       const endDt = toDateTime(m.date, m.end);
-      return endDt > nowDt; // ✅ 還沒結束就顯示（結束才消失）
+      return endDt > nowDt; //  還沒結束就顯示（結束才消失）
     });
 
     return list.sort((a, b) =>
@@ -222,7 +231,7 @@ export function MeetingsProvider({ children }) {
       const startDt = toDateTime(m.date, m.start);
       const endDt = toDateTime(m.date, m.end);
 
-      // ✅ 開始前 15 分鐘就算要顯示在上面大卡
+      //  開始前 15 分鐘就算要顯示在上面大卡
       const showFrom = new Date(startDt.getTime() - EARLY_MS);
 
       return now >= showFrom && now < endDt;
@@ -246,7 +255,7 @@ export function MeetingsProvider({ children }) {
         return {
           ...m,
           ...updated,
-          // ✅ 同步維護衝突檢查/顯示會用到的欄位
+          //  同步維護衝突檢查/顯示會用到的欄位
           start,
           end,
           startMin: hhmmToMin(start),
@@ -287,6 +296,7 @@ export function MeetingsProvider({ children }) {
       updateMeeting,
       weekdayZh,
       toNotStartedRows,
+      rooms,
     }),
     [meetings, now],
   );

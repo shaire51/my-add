@@ -1,11 +1,11 @@
 /* 整個預約頁外框：讓內容置中 */
 .reserve-page {
   width: 100%;
-  min-height: calc(100vh - 80px); /* 上下留一點空間 */
+  min-height: calc(100vh); /* 上下留一點空間 */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 24px 80px;
+  padding: 40px 24px 40px;
   box-sizing: border-box;
 }
 

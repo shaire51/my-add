@@ -18,8 +18,9 @@
 }
 
 .hero-image {
-  flex: 0 0 430px;
-  min-height: 260px;
+  flex: 0 0 700px; /* 固定寬 */
+  width: 700px;
+  height: 380px; /* 固定高（比 min-height 更穩） */
   border-radius: 12px;
   position: relative;
   background: #f6f6f6;
@@ -27,7 +28,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: hidden; /* 可留著，避免圓角溢出 */
 }
 
 .hero-info {
@@ -38,11 +39,9 @@
 }
 
 .hero-img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 不裁切，超出等比例縮放 */
   object-position: center;
   display: block;
 }
@@ -70,7 +69,7 @@
 }
 
 /* RWD：上下，且「資訊在上、圖片在下」 */
-@media (max-width: 900px) {
+@media (max-width: 1056px) {
   .hero {
     flex-direction: column;
     gap: 24px;
@@ -78,6 +77,8 @@
 
   .hero-info {
     order: 1; /*  資訊在上 */
+    width: 800px;
+    align-items: center;
   }
 
   .hero-image {
@@ -169,32 +170,27 @@
 }
 
 /* ✅ RWD：螢幕變窄才允許換行或改直排 */
-@media (max-width: 900px) {
+@media (max-width: 1056px) {
   .schedule-info {
-    flex-wrap: wrap; /* 開始換行 */
-    overflow: visible;
-  }
-
-  .schedule-col {
-    white-space: normal; /* 允許換行 */
+    flex-wrap: wrap;
   }
 
   .schedule-line,
   .schedule-card-title {
     white-space: normal;
     overflow: visible;
-    text-overflow: clip;
   }
 
   /* RWD 時欄位改成自適應 */
   .schedule-col.title,
   .schedule-col.time,
-  .schedule-col.meta {
-    width: auto;
-    flex: 1 1 240px;
+  .schedule-col.meta,
+  .schedule-col.people {
+    flex: auto;
   }
 
-  .schedule-col.people {
-    flex: 1 1 100%;
+  .schedule-card {
+    width: auto;
+    height: auto;
   }
 }

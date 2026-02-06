@@ -81,7 +81,7 @@
 
 .nav-dropdown {
   position: absolute;
-  top: calc(100% + 6px); /*  比 28px 更穩，不會因字體/高度變動出錯 */
+  top: calc(100%);
   right: 0;
   background: white;
   border: 1px solid #ddd;

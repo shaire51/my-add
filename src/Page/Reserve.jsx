@@ -84,6 +84,7 @@ export default function Reserve() {
   });
 
   const [msg, setMsg] = useState(null);
+  const [alternatives, setAlternatives] = useState([]);
   useEffect(() => {
     if (!editMeeting) return;
 
@@ -133,6 +134,7 @@ export default function Reserve() {
     e.preventDefault();
     const isEdit = !!form.id;
     setMsg(null);
+    setAlternatives([]);
 
     // 必填欄位檢查
     if (!form.name || !form.date || !form.start || !form.end || !form.place) {
@@ -184,6 +186,7 @@ export default function Reserve() {
 
       if (!check.ok) {
         setMsg({ type: "error", text: check.message });
+        setAlternatives(check.alternatives || []);
         return;
       }
 
@@ -383,6 +386,31 @@ export default function Reserve() {
           </button>
 
           {msg && <p className={`msg ${msg.type}`}>{msg.text}</p>}
+          {msg?.type === "error" && alternatives.length > 0 && (
+            <div className="alt-box">
+              <p className="alt-title">此時段可預約的會議室：</p>
+
+              <div className="alt-list">
+                {alternatives.map((room) => (
+                  <button
+                    key={room}
+                    type="button"
+                    className="alt-btn"
+                    onClick={() => {
+                      setForm((p) => ({ ...p, place: room }));
+                      setMsg({
+                        type: "ok",
+                        text: `已改為「${room}」，請再送出預約。`,
+                      });
+                      setAlternatives([]);
+                    }}
+                  >
+                    {room}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       </section>
     </div>
