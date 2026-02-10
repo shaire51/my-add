@@ -4,6 +4,7 @@ const pool = require("../db");
 const router = express.Router();
 
 // 取得會議列表
+
 router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -23,6 +24,69 @@ router.get("/", async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error(" 讀取會議失敗:", err);
+    res.status(500).json({ message: "資料庫錯誤" });
+  }
+});
+
+// 日期區間查詢（可選 place / q）
+router.get("/search", async (req, res) => {
+  const { from, to, place = "all", q = "" } = req.query;
+
+  if (!from || !to) {
+    return res.status(400).json({ message: "from、to 必填 (YYYY-MM-DD)" });
+  }
+
+  // where 條件與參數
+  let where = `WHERE date BETWEEN ? AND ?`;
+  const params = [from, to];
+
+  // 地點/樓層過濾（依你 place 欄位內容調整）
+  // 你目前 place 可能會是 "二樓會議室A" / "2F xxx" / "五樓..." 之類
+  if (place !== "all") {
+    if (place === "2F") {
+      where += ` AND (place LIKE ? OR place LIKE ? OR place LIKE ?)`;
+      params.push("%二樓%", "%2樓%", "%2F%");
+    } else if (place === "5F") {
+      where += ` AND (place LIKE ? OR place LIKE ? OR place LIKE ?)`;
+      params.push("%五樓%", "%5樓%", "%5F%");
+    } else {
+      // 如果你想支援傳入任意 place 字串（例如 "201會議室"）
+      where += ` AND place LIKE ?`;
+      params.push(`%${place}%`);
+    }
+  }
+
+  // 關鍵字模糊查（你想查哪些欄位就加哪些）
+  const keyword = String(q || "").trim();
+  if (keyword) {
+    where += ` AND (name LIKE ? OR unit LIKE ? OR reporter LIKE ? OR place LIKE ?)`;
+    const kw = `%${keyword}%`;
+    params.push(kw, kw, kw, kw);
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `
+      SELECT 
+        id,
+        name,
+        unit,
+        DATE_FORMAT(date, '%Y-%m-%d') AS date,
+        TIME_FORMAT(start_time, '%H:%i') AS start_time,
+        TIME_FORMAT(end_time, '%H:%i') AS end_time,
+        people,
+        reporter,
+        place
+      FROM meetings
+      ${where}
+      ORDER BY date ASC, start_time ASC
+      `,
+      params,
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(" 區間查詢失敗:", err);
     res.status(500).json({ message: "資料庫錯誤" });
   }
 });

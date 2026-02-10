@@ -38,3 +38,61 @@
 .btn-edit:hover {
   opacity: 0.85;
 }
+
+.admin-search {
+  margin: 12px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.admin-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+  align-items: end;
+}
+
+.admin-search-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.admin-search-q input {
+  min-width: 240px;
+}
+
+.admin-search-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-search,
+.btn-clear {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  background: #fff;
+  cursor: pointer;
+}
+
+.btn-search:disabled,
+.btn-clear:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-search-msg {
+  margin: 10px 0 0;
+  color: #c00;
+}
+
+.admin-search-hint {
+  margin: 8px 0 0;
+  color: #666;
+  font-size: 13px;
+}
