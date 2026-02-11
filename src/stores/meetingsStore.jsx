@@ -111,6 +111,31 @@ export function MeetingsProvider({ children }) {
     return () => clearInterval(timer);
   }, []);
 
+  function findConflicts(newM, meetings) {
+    const ns = hhmmToMin(newM.start);
+    const ne = hhmmToMin(newM.end);
+    if (ns == null || ne == null || Number.isNaN(ns) || Number.isNaN(ne))
+      return [];
+
+    return meetings.filter((m) => {
+      // 同一天
+      if (m.date !== newM.date) return false;
+
+      // 同地點（同一會議室才算衝突）
+      if ((m.place || "").trim() !== (newM.place || "").trim()) return false;
+
+      // 編輯時排除自己
+      if (newM.id && String(m.id) === String(newM.id)) return false;
+
+      const ms = hhmmToMin(m.start ?? m.start_time);
+      const me = hhmmToMin(m.end ?? m.end_time);
+      if (ms == null || me == null) return false;
+
+      // 時段重疊判斷： [ns,ne) 與 [ms,me) overlap
+      return ns < me && ms < ne;
+    });
+  }
+
   //  只檢查，不寫入
   function canAddMeeting(m) {
     const startDt = toDateTime(m.date, m.start);
@@ -135,10 +160,14 @@ export function MeetingsProvider({ children }) {
 
       const alternatives = rooms.filter((r) => r !== place);
 
+      // ✅這行是關鍵：把衝突會議找出來
+      const conflicts = findConflicts(m, meetings);
+
       return {
         ok: false,
         message: "此會議室在該時段已有會議，無法預約",
         alternatives,
+        conflicts, // 或 conflicts: conflicts.slice(0, 3)
       };
     }
     return { ok: true };
