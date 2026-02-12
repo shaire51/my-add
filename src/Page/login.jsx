@@ -17,7 +17,9 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:3001/api/login", {
+      const API_BASE = "http://192.168.76.165:3001";
+
+      const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ empId, password }),
@@ -30,7 +32,11 @@ export default function Login() {
         return;
       }
 
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       login(data.user);
+
       navigate("/reserve");
     } catch (err) {
       setError("無法連線到伺服器");

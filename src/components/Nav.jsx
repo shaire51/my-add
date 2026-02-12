@@ -10,7 +10,9 @@ export default function Nav() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout(); //  AuthContext
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 
@@ -42,7 +44,15 @@ export default function Nav() {
 
             {showMenu && (
               <div className="nav-dropdown">
-                <button onClick={handleLogout}>登出</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleLogout();
+                  }}
+                >
+                  登出
+                </button>
               </div>
             )}
           </div>

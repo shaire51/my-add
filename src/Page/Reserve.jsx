@@ -216,7 +216,7 @@ export default function Reserve() {
       if (!check.ok) {
         setMsg({ type: "error", text: check.message });
         setAlternatives(check.alternatives || []);
-        setConflicts(check.conflicts || []); // ✅新增
+        setConflicts(check.conflicts || []); // 新增
         return;
       }
 
@@ -238,9 +238,14 @@ export default function Reserve() {
         ? `${API_BASE}/api/meetings/${form.id}`
         : `${API_BASE}/api/meetings`;
 
+      const token = localStorage.getItem("token");
+
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -320,7 +325,6 @@ export default function Reserve() {
   return (
     <div className="reserve-page">
       <div className="reserve-layout">
-        {/* 左欄：你原本的內容 */}
         <div className="reserve-left">
           {/* 上面大框 */}
           <section className="reserve-hero">
@@ -464,7 +468,7 @@ export default function Reserve() {
                     {conflicts.map((m) => (
                       <li key={m.id} className="conflict-item">
                         <div className="conflict-top">
-                          <span>{m.date}</span>
+                          <p>{m.date}</p>
                           <span>
                             {m.start}~{m.end}
                           </span>

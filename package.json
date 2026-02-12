@@ -12,6 +12,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
+    "ldapjs": "^3.0.7",
     "react": "^19.2.0",
     "react-clock": "^6.0.0",
     "react-dom": "^19.2.0",

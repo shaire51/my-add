@@ -1,20 +1,15 @@
 /* 整個預約頁外框：讓內容置中 */
 .reserve-page {
   width: 100%;
-  min-height: calc(100vh); /* 上下留一點空間 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 24px 40px;
+  min-height: 100vh;
+  padding: 40px 24px;
   box-sizing: border-box;
 }
-
 /* ===== 上面那一大塊「會議預約系統 + 規範」 ===== */
 
 .reserve-hero {
   width: 100%;
-  max-width: 1040px;
-  margin-bottom: 60px;
+  margin-bottom: 24px;
 }
 
 .reserve-hero-inner {
@@ -47,7 +42,6 @@
 
 .reserve-form-section {
   width: 100%;
-  max-width: 720px;
   text-align: center;
 }
 
@@ -296,8 +290,8 @@
   opacity: 0.75;
 }
 
-/* ===== RWD：小於 1056 改成上下 ===== */
-@media (max-width: 1056px) {
+/* ===== RWD：小於 768 改成上下 ===== */
+@media (max-width: 768px) {
   .reserve-layout {
     grid-template-columns: 1fr;
   }

@@ -71,7 +71,11 @@ export function MeetingsProvider({ children }) {
         );
 
         // 2) 從後端載入
-        const res = await fetch("http://localhost:3001/api/meetings");
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:3001/api/meetings", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const list = await res.json();
 
         // 3) 轉換 + 把 attachments 接回來

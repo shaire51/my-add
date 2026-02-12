@@ -5,7 +5,7 @@ const pool = require("../db");
 const router = express.Router();
 
 router.post("/login", async (req, res) => {
-  const { empId, password } = req.body;
+  const { empId, password } = req.body || {};
 
   if (!empId || !password) {
     return res.status(400).json({ message: "請輸入帳號與密碼" });
@@ -42,4 +42,5 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "資料庫錯誤" });
   }
 });
+
 module.exports = router;
