@@ -41,6 +41,17 @@ function hasConflict(newM, meetings) {
 }
 
 export function MeetingsProvider({ children }) {
+  const API_BASE = "http://192.168.76.165:3001";
+  const API = `${API_BASE}/api/meetings`;
+
+  function authHeaders(extra = {}) {
+    const token = localStorage.getItem("token");
+    return {
+      ...extra,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
+
   const [meetings, setMeetings] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("meetings_v1") || "[]");
@@ -55,58 +66,70 @@ export function MeetingsProvider({ children }) {
   }, [meetings]);
 
   // 初始化 → 從後端載入全部會議
-  useEffect(() => {
-    async function load() {
-      try {
-        const local = meetings;
 
-        // 用「會議內容」當 key（因為後端 id 可能跟你本機 id 不同）
-        const makeKey = (m) =>
-          `${m.date}|${m.start || m.start_time}|${m.end || m.end_time}|${
-            m.place
-          }|${m.name}`;
+  async function reloadMeetings({ silent = false } = {}) {
+    try {
+      // 用「會議內容」當 key（延續你原本做法，保留 attachments）
+      const makeKey = (m) =>
+        `${m.date}|${m.start || m.start_time}|${m.end || m.end_time}|${m.place}|${m.name}`;
 
-        const attachMap = new Map(
-          local.map((m) => [makeKey(m), m.attachments || []]),
-        );
+      const attachMap = new Map(
+        meetings.map((m) => [makeKey(m), m.attachments || []]),
+      );
 
-        // 2) 從後端載入
-        const token = localStorage.getItem("token");
+      // ✅ 這行你漏掉了：真的去打 API
+      const res = await fetch(API, { headers: authHeaders() });
 
-        const res = await fetch("http://localhost:3001/api/meetings", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const list = await res.json();
-
-        // 3) 轉換 + 把 attachments 接回來
-        const converted = list.map((it) => {
-          const key = `${it.date}|${it.start_time}|${it.end_time}|${it.place}|${it.name}`;
-          return {
-            id: it.id,
-            name: it.name,
-            unit: it.unit,
-            date: it.date,
-            start: it.start_time,
-            end: it.end_time,
-            startMin: hhmmToMin(it.start_time),
-            endMin: hhmmToMin(it.end_time),
-            timeLabel: `${it.start_time}~${it.end_time}`,
-            people: it.people,
-            reporter: it.reporter,
-            place: it.place,
-
-            //  不要再清空，改成從 localStorage 對回來
-            attachments: attachMap.get(key) ?? [],
-          };
-        });
-
-        setMeetings(converted);
-      } catch (err) {
-        console.error("❌ 後端載入失敗：", err);
+      if (!res.ok) {
+        if (!silent) {
+          const text = await res.text().catch(() => "");
+          console.error("reloadMeetings failed:", res.status, text);
+        }
+        return { ok: false, status: res.status };
       }
-    }
 
-    load();
+      const list = await res.json();
+
+      const converted = (Array.isArray(list) ? list : []).map((it) => {
+        const key = `${it.date}|${it.start_time}|${it.end_time}|${it.place}|${it.name}`;
+        return {
+          id: it.id,
+          name: it.name,
+          unit: it.unit,
+          date: it.date,
+          start: it.start_time,
+          end: it.end_time,
+          startMin: hhmmToMin(it.start_time),
+          endMin: hhmmToMin(it.end_time),
+          timeLabel: `${it.start_time}~${it.end_time}`,
+          people: it.people,
+          reporter: it.reporter,
+          place: it.place,
+          attachments: attachMap.get(key) ?? [],
+        };
+      });
+
+      setMeetings(converted);
+      return { ok: true };
+    } catch (err) {
+      if (!silent) console.error("reloadMeetings error:", err);
+      return { ok: false, error: err };
+    }
+  }
+  useEffect(() => {
+    reloadMeetings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const intervalMs = 10 * 1000;
+
+    const timer = setInterval(() => {
+      reloadMeetings({ silent: true });
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 每 10 秒更新一次「現在時間」
@@ -220,27 +243,72 @@ export function MeetingsProvider({ children }) {
   }
 
   // 新增會議（加入前端 store）
-  function addMeeting(m) {
+  async function addMeeting(m) {
     const check = canAddMeeting(m);
     if (!check.ok) return check;
 
-    const full = {
-      ...m,
-      startMin: hhmmToMin(m.start),
-      endMin: hhmmToMin(m.end),
-      timeLabel: `${m.start}~${m.end}`,
-    };
+    const token = localStorage.getItem("token");
+    if (!token) return { ok: false, message: "未登入" };
 
-    setMeetings((prev) => [...prev, full]);
-    return { ok: true };
+    try {
+      const payload = {
+        name: m.name,
+        unit: m.unit,
+        date: m.date,
+        start_time: m.start,
+        end_time: m.end,
+        people: m.people,
+        reporter: m.reporter,
+        place: m.place,
+      };
+
+      const res = await fetch(API, {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { ok: false, message: data.message || "新增失敗" };
+
+      // 後端回傳 insertId
+      const full = {
+        ...m,
+        id: data.id, // ✅ 用後端的 id
+        startMin: hhmmToMin(m.start),
+        endMin: hhmmToMin(m.end),
+        timeLabel: `${m.start}~${m.end}`,
+      };
+
+      setMeetings((prev) => [...prev, full]);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: "無法連線到伺服器" };
+    }
   }
 
-  // 刪除會議（前端同步刪除）admin
-  function deleteMeeting(id) {
-    setMeetings((prev) => prev.filter((m) => m.id !== id));
-    return { ok: true };
-  }
+  async function deleteMeeting(id) {
+    const token = localStorage.getItem("token");
+    if (!token) return { ok: false, message: "未登入" };
 
+    try {
+      const res = await fetch(`${API}/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        return { ok: false, message: data.message || "刪除失敗" };
+      }
+
+      setMeetings((prev) => prev.filter((m) => m.id !== id));
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: "無法連線到伺服器" };
+    }
+  }
   // 排序列表 admin
   function toRows() {
     const sorted = [...meetings].sort((a, b) => {
@@ -277,26 +345,55 @@ export function MeetingsProvider({ children }) {
     );
   }
 
-  function updateMeeting(updated) {
-    setMeetings((prev) =>
-      prev.map((m) => {
-        if (m.id !== updated.id) return m;
+  async function updateMeeting(updated) {
+    const token = localStorage.getItem("token");
+    if (!token) return { ok: false, message: "未登入" };
 
-        const start = updated.start ?? m.start;
-        const end = updated.end ?? m.end;
+    try {
+      const payload = {
+        name: updated.name,
+        unit: updated.unit,
+        date: updated.date,
+        start_time: updated.start,
+        end_time: updated.end,
+        people: updated.people,
+        reporter: updated.reporter,
+        place: updated.place,
+      };
 
-        return {
-          ...m,
-          ...updated,
-          //  同步維護衝突檢查/顯示會用到的欄位
-          start,
-          end,
-          startMin: hhmmToMin(start),
-          endMin: hhmmToMin(end),
-          timeLabel: `${start}~${end}`,
-        };
-      }),
-    );
+      const res = await fetch(`${API}/${updated.id}`, {
+        method: "PUT",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { ok: false, message: data.message || "更新失敗" };
+
+      // 後端成功後才更新前端
+      setMeetings((prev) =>
+        prev.map((m) => {
+          if (m.id !== updated.id) return m;
+
+          const start = updated.start ?? m.start;
+          const end = updated.end ?? m.end;
+
+          return {
+            ...m,
+            ...updated,
+            start,
+            end,
+            startMin: hhmmToMin(start),
+            endMin: hhmmToMin(end),
+            timeLabel: `${start}~${end}`,
+          };
+        }),
+      );
+
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: "無法連線到伺服器" };
+    }
   }
 
   //body.jsx

@@ -1,9 +1,18 @@
 const express = require("express");
 const pool = require("../db");
+const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
 
-// 取得會議列表
+const ADMIN_IDS = new Set(["41414"]);
+
+function isAdmin(user) {
+  return ADMIN_IDS.has(String(user?.sub || ""));
+}
+
+function canEditOrDelete(ownerEmpId, user) {
+  return isAdmin(user) || String(ownerEmpId) === String(user.sub);
+}
 
 router.get("/", async (req, res) => {
   try {
@@ -17,14 +26,15 @@ router.get("/", async (req, res) => {
         TIME_FORMAT(end_time, '%H:%i') AS end_time,
         people,
         reporter,
-        place
+        place,
+        created_by
       FROM meetings
     `);
 
     res.json(rows);
   } catch (err) {
-    console.error(" 讀取會議失敗:", err);
-    res.status(500).json({ message: "資料庫錯誤" });
+    console.error("讀取會議失敗:", err);
+    res.status(500).json({ message: "資料庫錯誤5645" });
   }
 });
 
@@ -92,18 +102,37 @@ router.get("/search", async (req, res) => {
 });
 
 // 新增會議
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
+  console.log("req.user =", req.user);
   const { name, unit, date, start_time, end_time, people, reporter, place } =
     req.body;
+
+  const createdBy = req.user.sub;
+
+  if (!createdBy) {
+    return res
+      .status(401)
+      .json({ message: "JWT 缺少 sub，無法寫入 created_by" });
+  }
 
   try {
     const [result] = await pool.query(
       `
       INSERT INTO meetings 
-      (name, unit, date, start_time, end_time, people, reporter, place)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (name, unit, date, start_time, end_time, people, reporter, place, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [name, unit, date, start_time, end_time, people, reporter, place],
+      [
+        name,
+        unit,
+        date,
+        start_time,
+        end_time,
+        people,
+        reporter,
+        place,
+        createdBy,
+      ],
     );
 
     res.status(201).json({
@@ -117,15 +146,29 @@ router.post("/", async (req, res) => {
 });
 
 // 刪除會議
-router.delete("/:id", async (req, res) => {
-  try {
-    const [result] = await pool.query("DELETE FROM meetings WHERE id = ?", [
-      req.params.id,
-    ]);
+router.delete("/:id", requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ message: "id 不正確" });
 
-    if (result.affectedRows === 0) {
+  try {
+    const [rows] = await pool.query(
+      "SELECT created_by FROM meetings WHERE id = ?",
+      [id],
+    );
+
+    if (rows.length === 0) {
       return res.status(404).json({ message: "找不到這筆會議" });
     }
+
+    const owner = rows[0].created_by;
+
+    if (!canEditOrDelete(owner, req.user)) {
+      return res.status(403).json({ message: "沒有權限刪除這筆會議" });
+    }
+
+    const [result] = await pool.query("DELETE FROM meetings WHERE id = ?", [
+      id,
+    ]);
 
     res.json({ message: "刪除成功" });
   } catch (err) {
@@ -134,7 +177,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   const { name, unit, date, start_time, end_time, people, reporter, place } =
     req.body;
@@ -142,16 +185,27 @@ router.put("/:id", async (req, res) => {
   if (!id) return res.status(400).json({ message: "id 不正確" });
 
   try {
+    const [rows] = await pool.query(
+      "SELECT created_by FROM meetings WHERE id = ?",
+      [id],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "找不到這筆會議" });
+    }
+
+    const owner = rows[0].created_by;
+
+    if (!canEditOrDelete(owner, req.user)) {
+      return res.status(403).json({ message: "沒有權限修改這筆會議" });
+    }
+
     const [result] = await pool.query(
       `UPDATE meetings
        SET name=?, unit=?, date=?, start_time=?, end_time=?, people=?, reporter=?, place=?
        WHERE id=?`,
       [name, unit, date, start_time, end_time, people, reporter, place, id],
     );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "找不到這筆會議" });
-    }
 
     res.json({ ok: true, id });
   } catch (err) {

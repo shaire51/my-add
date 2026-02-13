@@ -3,8 +3,8 @@ import { useMemo, useState } from "react";
 import { useMeetings } from "../stores/meetingsStore.jsx";
 import "../styles/admin.css";
 import { useNavigate } from "react-router-dom";
-
-const API = "http://192.168.76.165:3001/api/meetings";
+const API_BASE = "http://192.168.76.165:3001";
+const API = `${API_BASE}/api/meetings`;
 
 export default function Admin() {
   const { toNotStartedRows, deleteMeeting } = useMeetings();
@@ -30,23 +30,17 @@ export default function Admin() {
     const ok = window.confirm("確定要刪除這筆會議嗎？");
     if (!ok) return;
 
-    try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+    const r = await deleteMeeting(id);
+    console.log("deleteMeeting result:", r, "deleted id:", id);
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        alert(data.message || "刪除失敗（後端錯誤）");
-        return;
-      }
+    if (!r.ok) {
+      alert(r.message || "刪除失敗");
+      return;
+    }
 
-      deleteMeeting(id);
-
-      if (searchRows !== null) {
-        setSearchRows((prev) => (prev || []).filter((m) => m.id !== id));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("刪除失敗（無法連線到伺服器）");
+    // 若目前是查詢模式，順便把查詢結果也移除
+    if (searchRows !== null) {
+      setMeetings((prev) => prev.filter((m) => String(m.id) !== String(id)));
     }
   };
 

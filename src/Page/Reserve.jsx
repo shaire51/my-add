@@ -6,6 +6,7 @@ import { useMeetings } from "../stores/meetingsStore.jsx";
 import { useAuth } from "../stores/AuthContext.jsx";
 
 const pad2 = (n) => String(n).padStart(2, "0");
+const API_BASE = "http://192.168.76.165:3001";
 
 // 把檔案讀成 base64，之後 Body 要做預覽／下載用
 function readFileAsDataURL(file) {
@@ -20,7 +21,7 @@ function readFileAsDataURL(file) {
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
-  const minutes = [0, 1, 15, 30, 31];
+  const minutes = [0, 1, 11, 12, 30, 31];
 
   const h = value ? Number(value.split(":")[0]) : "";
   const m = value ? Number(value.split(":")[1]) : "";
@@ -219,103 +220,61 @@ export default function Reserve() {
         setConflicts(check.conflicts || []); // 新增
         return;
       }
-
-      //  送後端
-      const payload = {
-        name: form.name.trim(),
-        unit: form.unit.trim(),
-        date: form.date,
-        start_time: form.start,
-        end_time: form.end,
-        people: form.people.trim(),
-        reporter: user.name,
-        place: form.place.trim(),
-      };
-
-      const API_BASE = "http://192.168.76.165:3001";
-
-      const url = isEdit
-        ? `${API_BASE}/api/meetings/${form.id}`
-        : `${API_BASE}/api/meetings`;
-
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        console.error("API error:", res.status, data);
-        setMsg({
-          type: "error",
-          text:
-            data.message ||
-            (isEdit
-              ? `後端更新失敗(${res.status})`
-              : `後端儲存失敗(${res.status})`),
-        });
-        return;
-      }
-
-      if (!isEdit) {
-        const { ok, error } = addMeeting({
-          id: data.id,
-          name: form.name.trim(),
-          unit: form.unit.trim(),
-          date: form.date,
-          start: form.start,
-          end: form.end,
-          reporter: user.name,
-          people: form.people.trim(),
-          place: form.place.trim(),
-          attachments,
-        });
-
-        if (!ok) {
-          setMsg({ type: "error", text: error || "預約失敗，時間衝突" });
-          return;
-        }
-
-        setMsg({ type: "ok", text: "預約成功，已寫入資料庫並加入排程！" });
-
-        setForm({
-          id: null,
-          name: "",
-          unit: "",
-          date: "",
-          start: "",
-          end: "",
-          people: "",
-          place: "",
-          file: null,
-        });
-      } else {
-        //  編輯成功：更新 store 這筆資料
-        updateMeeting({
+      if (isEdit) {
+        const r = await updateMeeting({
           id: form.id,
           name: form.name.trim(),
           unit: form.unit.trim(),
           date: form.date,
           start: form.start,
           end: form.end,
-          start_time: form.start, // 若你別處用 start_time 也一起帶
-          end_time: form.end,
           people: form.people.trim(),
-          place: form.place.trim(),
           reporter: user.name,
+          place: form.place.trim(),
+          attachments,
         });
+
+        if (!r.ok) {
+          setMsg({ type: "error", text: r.message || "更新失敗" });
+          return;
+        }
 
         setMsg({ type: "ok", text: "更新成功！" });
         navigate("/admin");
         return;
       }
+
+      // 新增
+      const r = await addMeeting({
+        name: form.name.trim(),
+        unit: form.unit.trim(),
+        date: form.date,
+        start: form.start,
+        end: form.end,
+        people: form.people.trim(),
+        reporter: user.name,
+        place: form.place.trim(),
+        attachments,
+      });
+
+      if (!r.ok) {
+        setMsg({ type: "error", text: r.message || "新增失敗" });
+        return;
+      }
+
+      setMsg({ type: "ok", text: "預約成功！" });
+      setForm({
+        id: null,
+        name: "",
+        unit: "",
+        date: "",
+        start: "",
+        end: "",
+        people: "",
+        place: "",
+        file: null,
+      });
+      return;
     } catch (err) {
       console.error(err);
       setMsg({ type: "error", text: "預約失敗（後端無法儲存）" });
