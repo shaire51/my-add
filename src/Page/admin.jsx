@@ -65,14 +65,27 @@ export default function Admin() {
       const url = `${API}/search?${params.toString()}`;
       console.log("search url:", url);
 
-      const res = await fetch(url);
+      const token = localStorage.getItem("token");
 
-      const text = await res.text(); // ✅ 先拿純文字
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      const text = await res.text();
       const ct = res.headers.get("content-type") || "";
       console.log("status:", res.status, "content-type:", ct);
       console.log("body head:", text.slice(0, 120));
 
       const data = JSON.parse(text);
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setMsg("登入已過期，請重新登入");
+        setSearchRows([]);
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         setMsg(data.message || "查詢失敗");

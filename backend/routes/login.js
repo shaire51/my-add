@@ -129,7 +129,7 @@ router.post("/", async (req, res) => {
     await ldapBind(client, userDN, password);
 
     // 4) 驗證成功：回傳 user + token
-    // ✅ JWT 建議只放「必要」資訊，避免塞太多內部欄位
+    //
     const user = {
       empId: getAttr(entry, "sAMAccountName") || empId,
       name: getAttr(entry, "displayName"),
@@ -138,7 +138,10 @@ router.post("/", async (req, res) => {
       upn: getAttr(entry, "userPrincipalName"),
     };
 
-    // ✅ 建議用 subject (sub) 放唯一值，payload 不要太大
+    console.log("login user =", user);
+    console.log("user.empId =", user.empId);
+    console.log("user.emp_id =", user.emp_id);
+
     const token = jwt.sign(
       { name: user.name, email: user.email, dept: user.dept },
       process.env.JWT_SECRET,
@@ -155,9 +158,9 @@ router.post("/", async (req, res) => {
 
     const badPw =
       name === "InvalidCredentialsError" ||
-      code === "49" || // AD 常見 invalid credentials
+      code === "49" ||
       msg.includes("InvalidCredentials") ||
-      ldapMsg.includes("data 52e"); // AD 常見：52e = 密碼錯
+      ldapMsg.includes("data 52e");
 
     return res
       .status(401)

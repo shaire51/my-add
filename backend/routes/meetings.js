@@ -4,14 +4,25 @@ const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
 
-const ADMIN_IDS = new Set(["41414"]);
+const ADMIN_IDS = new Set(["41414", "tcitadmin", ""]);
 
 function isAdmin(user) {
-  return ADMIN_IDS.has(String(user?.sub || ""));
+  const sub = String(user?.sub || "")
+    .trim()
+    .toLowerCase();
+  return ADMIN_IDS.has(sub);
 }
 
 function canEditOrDelete(ownerEmpId, user) {
-  return isAdmin(user) || String(ownerEmpId) === String(user.sub);
+  const owner = String(ownerEmpId || "").trim();
+  const sub = String(user?.sub || "").trim();
+
+  console.log("owner =", owner);
+  console.log("sub =", sub);
+  console.log("isAdmin =", isAdmin(user));
+  console.log("owner===sub", owner === sub);
+
+  return isAdmin(user) || owner === sub;
 }
 
 router.get("/", async (req, res) => {
@@ -181,6 +192,8 @@ router.put("/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
   const { name, unit, date, start_time, end_time, people, reporter, place } =
     req.body;
+  console.log("req.user =", req.user);
+  console.log("req.user.sub =", req.user?.sub);
 
   if (!id) return res.status(400).json({ message: "id 不正確" });
 

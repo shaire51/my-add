@@ -21,7 +21,7 @@ function readFileAsDataURL(file) {
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
-  const minutes = [0, 1, 11, 12, 30, 31];
+  const minutes = [0, 40, 30];
 
   const h = value ? Number(value.split(":")[0]) : "";
   const m = value ? Number(value.split(":")[1]) : "";

@@ -69,15 +69,6 @@ export function MeetingsProvider({ children }) {
 
   async function reloadMeetings({ silent = false } = {}) {
     try {
-      // 用「會議內容」當 key（延續你原本做法，保留 attachments）
-      const makeKey = (m) =>
-        `${m.date}|${m.start || m.start_time}|${m.end || m.end_time}|${m.place}|${m.name}`;
-
-      const attachMap = new Map(
-        meetings.map((m) => [makeKey(m), m.attachments || []]),
-      );
-
-      // ✅ 這行你漏掉了：真的去打 API
       const res = await fetch(API, { headers: authHeaders() });
 
       if (!res.ok) {
@@ -90,9 +81,12 @@ export function MeetingsProvider({ children }) {
 
       const list = await res.json();
 
-      const converted = (Array.isArray(list) ? list : []).map((it) => {
-        const key = `${it.date}|${it.start_time}|${it.end_time}|${it.place}|${it.name}`;
-        return {
+      setMeetings((prev) => {
+        const attachMap = new Map(
+          prev.map((m) => [String(m.id), m.attachments || []]),
+        );
+
+        const converted = (Array.isArray(list) ? list : []).map((it) => ({
           id: it.id,
           name: it.name,
           unit: it.unit,
@@ -105,11 +99,12 @@ export function MeetingsProvider({ children }) {
           people: it.people,
           reporter: it.reporter,
           place: it.place,
-          attachments: attachMap.get(key) ?? [],
-        };
+          attachments: attachMap.get(String(it.id)) ?? [],
+        }));
+
+        return converted;
       });
 
-      setMeetings(converted);
       return { ok: true };
     } catch (err) {
       if (!silent) console.error("reloadMeetings error:", err);
