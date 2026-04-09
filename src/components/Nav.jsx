@@ -29,7 +29,52 @@ export default function Nav() {
       <div className="nav-center">
         <Link to="/">會議排程</Link>
         <Link to="/reserve">會議預約</Link>
-        <Link to="/admin">會議編輯</Link>
+        <Link to="/admin">會議管理</Link>
+        <div className="dropdown">
+          <button className="dropdown-btn">其他</button>
+
+          <div className="dropdown-menu">
+            <a
+              href="http://172.16.1.100/bms/elRegForm/externalInit#!"
+              target="_blank"
+              rel="noreferrer"
+            >
+              電子捐血登記表
+            </a>
+
+            <a
+              href="http://192.168.71.12:90/itinerary/php/read.php"
+              target="_blank"
+              rel="noreferrer"
+            >
+              存放檔案
+            </a>
+
+            <a
+              href="http://192.168.71.12:90/itinerary/barcode"
+              target="_blank"
+              rel="noreferrer"
+            >
+              條碼產生
+            </a>
+
+            <a
+              href="http://192.168.71.12:90/build/Pdf"
+              target="_blank"
+              rel="noreferrer"
+            >
+              PDF壓縮(限一頁)
+            </a>
+
+            <a
+              href="http://192.168.71.12:90/build/manyPdf"
+              target="_blank"
+              rel="noreferrer"
+            >
+              PDF壓縮(多頁)
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* 右側登入區 */}

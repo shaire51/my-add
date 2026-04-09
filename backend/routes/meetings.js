@@ -28,18 +28,19 @@ function canEditOrDelete(ownerEmpId, user) {
 router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT 
-        id,
-        name,
-        unit,
-        DATE_FORMAT(date, '%Y-%m-%d') AS date,
-        TIME_FORMAT(start_time, '%H:%i') AS start_time,
-        TIME_FORMAT(end_time, '%H:%i') AS end_time,
-        people,
-        reporter,
-        place,
-        created_by
-      FROM meetings
+  SELECT 
+    id,
+    name,
+    unit,
+    DATE_FORMAT(date, '%Y-%m-%d') AS date,
+    TIME_FORMAT(start_time, '%H:%i') AS start_time,
+    TIME_FORMAT(end_time, '%H:%i') AS end_time,
+    people,
+    reporter,
+    place,
+    is_video,
+    participant_count
+  FROM meetings
     `);
 
     res.json(rows);
@@ -51,18 +52,22 @@ router.get("/", async (req, res) => {
 
 // 日期區間查詢（可選 place / q）
 router.get("/search", async (req, res) => {
-  const { from, to, place = "all", q = "" } = req.query;
+  const {
+    from,
+    to,
+    place = "all",
+    q = "",
+    reporter = "",
+    unit = "",
+  } = req.query;
 
   if (!from || !to) {
     return res.status(400).json({ message: "from、to 必填 (YYYY-MM-DD)" });
   }
 
-  // where 條件與參數
   let where = `WHERE date BETWEEN ? AND ?`;
   const params = [from, to];
 
-  // 地點/樓層過濾（依你 place 欄位內容調整）
-  // 你目前 place 可能會是 "二樓會議室A" / "2F xxx" / "五樓..." 之類
   if (place !== "all") {
     if (place === "2F") {
       where += ` AND (place LIKE ? OR place LIKE ? OR place LIKE ?)`;
@@ -71,13 +76,11 @@ router.get("/search", async (req, res) => {
       where += ` AND (place LIKE ? OR place LIKE ? OR place LIKE ?)`;
       params.push("%五樓%", "%5樓%", "%5F%");
     } else {
-      // 如果你想支援傳入任意 place 字串（例如 "201會議室"）
       where += ` AND place LIKE ?`;
       params.push(`%${place}%`);
     }
   }
 
-  // 關鍵字模糊查（你想查哪些欄位就加哪些）
   const keyword = String(q || "").trim();
   if (keyword) {
     where += ` AND (name LIKE ? OR unit LIKE ? OR reporter LIKE ? OR place LIKE ?)`;
@@ -85,29 +88,43 @@ router.get("/search", async (req, res) => {
     params.push(kw, kw, kw, kw);
   }
 
+  const reporterKeyword = String(reporter || "").trim();
+  if (reporterKeyword) {
+    where += ` AND reporter LIKE ?`;
+    params.push(`%${reporterKeyword}%`);
+  }
+
+  const unitKeyword = String(unit || "").trim();
+  if (unitKeyword) {
+    where += ` AND unit LIKE ?`;
+    params.push(`%${unitKeyword}%`);
+  }
+
   try {
     const [rows] = await pool.query(
       `
-      SELECT 
-        id,
-        name,
-        unit,
-        DATE_FORMAT(date, '%Y-%m-%d') AS date,
-        TIME_FORMAT(start_time, '%H:%i') AS start_time,
-        TIME_FORMAT(end_time, '%H:%i') AS end_time,
-        people,
-        reporter,
-        place
-      FROM meetings
-      ${where}
-      ORDER BY date ASC, start_time ASC
-      `,
+    SELECT 
+      id,
+      name,
+      unit,
+      DATE_FORMAT(date, '%Y-%m-%d') AS date,
+      TIME_FORMAT(start_time, '%H:%i') AS start_time,
+      TIME_FORMAT(end_time, '%H:%i') AS end_time,
+      people,
+      reporter,
+      place,
+      is_video,
+      participant_count
+    FROM meetings
+  ${where}
+  ORDER BY date ASC, start_time ASC
+  `,
       params,
     );
 
     res.json(rows);
   } catch (err) {
-    console.error(" 區間查詢失敗:", err);
+    console.error("區間查詢失敗:", err);
     res.status(500).json({ message: "資料庫錯誤" });
   }
 });
@@ -115,8 +132,18 @@ router.get("/search", async (req, res) => {
 // 新增會議
 router.post("/", requireAuth, async (req, res) => {
   console.log("req.user =", req.user);
-  const { name, unit, date, start_time, end_time, people, reporter, place } =
-    req.body;
+  const {
+    name,
+    unit,
+    date,
+    start_time,
+    end_time,
+    people,
+    reporter,
+    place,
+    is_video,
+    participant_count,
+  } = req.body;
 
   const createdBy = req.user.sub;
 
@@ -129,10 +156,13 @@ router.post("/", requireAuth, async (req, res) => {
   try {
     const [result] = await pool.query(
       `
-      INSERT INTO meetings 
-      (name, unit, date, start_time, end_time, people, reporter, place, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
+  INSERT INTO meetings 
+  (
+    name, unit, date, start_time, end_time,
+    people, reporter, place, is_video, participant_count, created_by
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `,
       [
         name,
         unit,
@@ -142,6 +172,8 @@ router.post("/", requireAuth, async (req, res) => {
         people,
         reporter,
         place,
+        is_video ? 1 : 0,
+        Number(participant_count) || 0,
         createdBy,
       ],
     );
@@ -190,8 +222,18 @@ router.delete("/:id", requireAuth, async (req, res) => {
 
 router.put("/:id", requireAuth, async (req, res) => {
   const id = Number(req.params.id);
-  const { name, unit, date, start_time, end_time, people, reporter, place } =
-    req.body;
+  const {
+    name,
+    unit,
+    date,
+    start_time,
+    end_time,
+    people,
+    reporter,
+    place,
+    is_video,
+    participant_count,
+  } = req.body;
   console.log("req.user =", req.user);
   console.log("req.user.sub =", req.user?.sub);
 
@@ -215,9 +257,21 @@ router.put("/:id", requireAuth, async (req, res) => {
 
     const [result] = await pool.query(
       `UPDATE meetings
-       SET name=?, unit=?, date=?, start_time=?, end_time=?, people=?, reporter=?, place=?
-       WHERE id=?`,
-      [name, unit, date, start_time, end_time, people, reporter, place, id],
+   SET name=?, unit=?, date=?, start_time=?, end_time=?, people=?, reporter=?, place=?, is_video=?, participant_count=?
+   WHERE id=?`,
+      [
+        name,
+        unit,
+        date,
+        start_time,
+        end_time,
+        people,
+        reporter,
+        place,
+        is_video ? 1 : 0,
+        Number(participant_count) || 0,
+        id,
+      ],
     );
 
     res.json({ ok: true, id });

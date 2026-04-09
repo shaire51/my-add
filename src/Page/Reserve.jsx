@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Reserve.css";
 import { useMeetings } from "../stores/meetingsStore.jsx";
 import { useAuth } from "../stores/AuthContext.jsx";
+import { reserveSchema } from "../schemas/reserveSchema.js";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 const API_BASE = "http://192.168.76.165:3001";
@@ -21,7 +22,7 @@ function readFileAsDataURL(file) {
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
-  const minutes = [0, 40, 30];
+  const minutes = [0, 30];
 
   const h = value ? Number(value.split(":")[0]) : "";
   const m = value ? Number(value.split(":")[1]) : "";
@@ -82,10 +83,13 @@ export default function Reserve() {
     end: "",
     people: "",
     place: "",
+    isVideo: false,
+    participantCount: "",
     file: null,
   });
 
   const [msg, setMsg] = useState(null);
+  const [errors, setErrors] = useState({});
   const [alternatives, setAlternatives] = useState([]);
   const [conflicts, setConflicts] = useState([]);
   useEffect(() => {
@@ -101,12 +105,15 @@ export default function Reserve() {
       end: editMeeting.end ?? editMeeting.end_time ?? "",
       people: editMeeting.people ?? "",
       place: editMeeting.place ?? "",
+      isVideo: !!editMeeting.isVideo,
+      participantCount: editMeeting.participantCount ?? "",
       file: null,
     }));
   }, [editMeeting]);
   const handleFieldChange = (e) => {
     const { id, value } = e.target;
     setForm((p) => ({ ...p, [id]: value }));
+    setErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
   const next7Rows = useMemo(() => {
@@ -166,27 +173,42 @@ export default function Reserve() {
     setAlternatives([]);
     setConflicts([]);
 
-    // 必填欄位檢查
-    if (!form.name || !form.date || !form.start || !form.end || !form.place) {
-      setMsg({ type: "error", text: "請填寫必填欄位！" });
+    const result = reserveSchema.safeParse(form);
+
+    if (!result.success) {
+      const fieldErrors = {};
+
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0];
+        if (field && !fieldErrors[field]) {
+          fieldErrors[field] = issue.message;
+        }
+      });
+
+      setErrors(fieldErrors);
       return;
     }
 
-    //  檔案格式檢查（一定要在讀檔前）
+    setErrors({});
+
+    // 檔案格式檢查（一定要在讀檔前）
     if (form.file) {
-      const allowedTypes = ["image/jpeg", "image/tiff"];
-      const allowedExt = ["jpg", "jpeg", "tif", "tiff", "png"];
+      const allowedTypes = ["image/jpeg", "image/png", "image/tiff"];
+      const allowedExt = ["jpg", "jpeg", "png", "tif", "tiff"];
 
       const fileType = form.file.type;
       const fileExt = form.file.name.split(".").pop().toLowerCase();
 
       if (!allowedTypes.includes(fileType) && !allowedExt.includes(fileExt)) {
-        setMsg({ type: "error", text: "附件僅限 JPG,TIF,png 格式" });
+        setMsg({
+          type: "error",
+          text: "附件僅限 JPG、JPEG、PNG、TIF、TIFF 格式",
+        });
         return;
       }
     }
 
-    //  處理附件（通過檢查後才讀）
+    // 處理附件（通過檢查後才讀）
     let attachments = [];
     if (form.file) {
       const dataUrl = await readFileAsDataURL(form.file);
@@ -201,7 +223,7 @@ export default function Reserve() {
     }
 
     try {
-      //  時段衝突檢查
+      // 時段衝突檢查
       const check = canAddMeeting({
         id: form.id,
         name: form.name.trim(),
@@ -212,14 +234,17 @@ export default function Reserve() {
         people: form.people.trim(),
         reporter: user.name,
         place: form.place.trim(),
+        isVideo: form.isVideo,
+        participantCount: Number(form.participantCount) || 0,
       });
 
       if (!check.ok) {
         setMsg({ type: "error", text: check.message });
         setAlternatives(check.alternatives || []);
-        setConflicts(check.conflicts || []); // 新增
+        setConflicts(check.conflicts || []);
         return;
       }
+
       if (isEdit) {
         const r = await updateMeeting({
           id: form.id,
@@ -231,6 +256,8 @@ export default function Reserve() {
           people: form.people.trim(),
           reporter: user.name,
           place: form.place.trim(),
+          isVideo: form.isVideo,
+          participantCount: Number(form.participantCount) || 0,
           attachments,
         });
 
@@ -244,7 +271,6 @@ export default function Reserve() {
         return;
       }
 
-      // 新增
       const r = await addMeeting({
         name: form.name.trim(),
         unit: form.unit.trim(),
@@ -254,6 +280,8 @@ export default function Reserve() {
         people: form.people.trim(),
         reporter: user.name,
         place: form.place.trim(),
+        isVideo: form.isVideo,
+        participantCount: Number(form.participantCount) || 0,
         attachments,
       });
 
@@ -272,9 +300,10 @@ export default function Reserve() {
         end: "",
         people: "",
         place: "",
+        isVideo: false,
+        participantCount: "",
         file: null,
       });
-      return;
     } catch (err) {
       console.error(err);
       setMsg({ type: "error", text: "預約失敗（後端無法儲存）" });
@@ -305,49 +334,119 @@ export default function Reserve() {
             <form className="reserve-form" onSubmit={onSubmit}>
               <div className="reserve-row">
                 <div className="reserve-field">
-                  <label>會議名稱</label>
+                  <label
+                    className={
+                      errors.name ? "field-label error" : "field-label"
+                    }
+                  >
+                    會議名稱
+                  </label>
                   <input
                     id="name"
                     value={form.name}
                     onChange={handleFieldChange}
+                    className={errors.name ? "input-error" : ""}
                   />
+                  {errors.name && (
+                    <p className="field-error-text">⚠ {errors.name}</p>
+                  )}
                 </div>
 
                 <div className="reserve-field">
-                  <label>主辦單位</label>
+                  <label
+                    className={
+                      errors.unit ? "field-label error" : "field-label"
+                    }
+                  >
+                    主辦單位
+                  </label>
                   <input
                     id="unit"
                     value={form.unit}
                     onChange={handleFieldChange}
+                    className={errors.unit ? "input-error" : ""}
                   />
+                  {errors.unit && (
+                    <p className="field-error-text">⚠ {errors.unit}</p>
+                  )}
                 </div>
               </div>
 
               <div className="reserve-field">
-                <label>會議日期</label>
+                <label
+                  className={errors.date ? "field-label error" : "field-label"}
+                >
+                  會議日期
+                </label>
                 <input
                   id="date"
                   type="date"
                   value={form.date}
                   onChange={handleFieldChange}
+                  className={errors.date ? "input-error" : ""}
                 />
+                {errors.date && (
+                  <p className="field-error-text">⚠{errors.date}</p>
+                )}
               </div>
 
               <div className="reserve-field">
-                <label>會議時間</label>
-                <div className="reserve-row time-row">
-                  <TimeSelect
-                    id="start"
-                    value={form.start}
-                    onChange={(v) => setForm((p) => ({ ...p, start: v }))}
-                  />
-                  <span className="time-sep">~</span>
-                  <TimeSelect
-                    id="end"
-                    value={form.end}
-                    onChange={(v) => setForm((p) => ({ ...p, end: v }))}
-                  />
+                <label
+                  className={
+                    errors.start || errors.end
+                      ? "field-label error"
+                      : "field-label"
+                  }
+                >
+                  會議時間
+                </label>
+
+                <div className="meeting-time-video-row">
+                  <div
+                    className={`reserve-row time-row ${
+                      errors.start || errors.end ? "time-row-error" : ""
+                    }`}
+                  >
+                    <TimeSelect
+                      id="start"
+                      value={form.start}
+                      onChange={(v) => {
+                        setForm((p) => ({ ...p, start: v }));
+                        setErrors((prev) => ({ ...prev, start: "" }));
+                      }}
+                    />
+                    <span className="time-sep">~</span>
+                    <TimeSelect
+                      id="end"
+                      value={form.end}
+                      onChange={(v) => {
+                        setForm((p) => ({ ...p, end: v }));
+                        setErrors((prev) => ({ ...prev, end: "" }));
+                      }}
+                    />
+                  </div>
+
+                  <div className="video-inline">
+                    <span className="video-label">是否視訊：</span>
+                    <label className="video-check-wrap">
+                      <input
+                        id="isVideo"
+                        type="checkbox"
+                        checked={form.isVideo}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, isVideo: e.target.checked }))
+                        }
+                      />
+                      <span>{form.isVideo ? "是" : "否"}</span>
+                    </label>
+                  </div>
                 </div>
+
+                {(errors.start || errors.end) && (
+                  <p className="field-error-text">
+                    ⚠ {errors.start || errors.end}
+                  </p>
+                )}
               </div>
 
               <div className="reserve-field">
@@ -356,25 +455,56 @@ export default function Reserve() {
               </div>
 
               <div className="reserve-field">
-                <label>參加人員</label>
+                <label
+                  className={
+                    errors.people ? "field-label error" : "field-label"
+                  }
+                >
+                  參加人員
+                </label>
                 <input
                   id="people"
                   value={form.people}
                   onChange={handleFieldChange}
+                  className={errors.people ? "input-error" : ""}
                 />
+                {errors.people && (
+                  <p className="field-error-text">⚠ {errors.people}</p>
+                )}
               </div>
 
               <div className="reserve-field">
-                <label>地點</label>
+                <label
+                  className={errors.place ? "field-label error" : "field-label"}
+                >
+                  會議室
+                </label>
                 <select
                   id="place"
                   value={form.place}
                   onChange={handleFieldChange}
+                  className={errors.place ? "input-error" : ""}
                 >
                   <option value="">請選擇會議室</option>
                   <option value="五樓會議室">五樓會議室</option>
                   <option value="二樓會議室">二樓會議室</option>
                 </select>
+                {errors.place && (
+                  <p className="field-error-text">⚠{errors.place}</p>
+                )}
+              </div>
+              <div className="reserve-field">
+                <label className="field-label">參與人數</label>
+                <input
+                  id="participantCount"
+                  type="number"
+                  min="0"
+                  value={form.participantCount}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, participantCount: e.target.value }))
+                  }
+                  placeholder="請輸入參與人數"
+                />
               </div>
 
               <div className="reserve-field">

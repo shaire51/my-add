@@ -12,8 +12,10 @@ export default function Admin() {
   const navigate = useNavigate();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [place, setPlace] = useState("all"); // all | 2F | 5F
+  const [place, setPlace] = useState("all");
   const [q, setQ] = useState("");
+  const [reporter, setReporter] = useState("");
+  const [unit, setUnit] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchRows, setSearchRows] = useState(null);
   const [msg, setMsg] = useState("");
@@ -40,7 +42,7 @@ export default function Admin() {
 
     // 若目前是查詢模式，順便把查詢結果也移除
     if (searchRows !== null) {
-      setMeetings((prev) => prev.filter((m) => String(m.id) !== String(id)));
+      setSearchRows((prev) => prev.filter((m) => String(m.id) !== String(id)));
     }
   };
 
@@ -58,6 +60,8 @@ export default function Admin() {
       to,
       ...(place !== "all" ? { place } : {}),
       ...(q.trim() ? { q: q.trim() } : {}),
+      ...(reporter.trim() ? { reporter: reporter.trim() } : {}),
+      ...(unit.trim() ? { unit: unit.trim() } : {}),
     });
 
     setLoading(true);
@@ -105,8 +109,19 @@ export default function Admin() {
   };
 
   const clearSearch = () => {
+    setFrom("");
+    setTo("");
+    setPlace("all");
+    setQ("");
+    setReporter("");
+    setUnit("");
     setSearchRows(null);
     setMsg("");
+  };
+
+  const isEndedMeeting = (m) => {
+    const end = new Date(`${m.date}T${m.end_time || "00:00"}:00`);
+    return end.getTime() < Date.now();
   };
 
   return (
@@ -135,12 +150,30 @@ export default function Admin() {
           </label>
 
           <label>
-            樓層
+            會議室
             <select value={place} onChange={(e) => setPlace(e.target.value)}>
               <option value="all">全部</option>
-              <option value="2F">2F</option>
-              <option value="5F">5F</option>
+              <option value="2F">二樓會議室</option>
+              <option value="5F">五樓會議室</option>
             </select>
+          </label>
+
+          <label>
+            提報人
+            <input
+              value={reporter}
+              onChange={(e) => setReporter(e.target.value)}
+              placeholder="請輸入提報人"
+            />
+          </label>
+
+          <label>
+            主辦單位
+            <input
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="請輸入主辦單位"
+            />
           </label>
 
           <label className="admin-search-q">
@@ -181,7 +214,7 @@ export default function Admin() {
         )}
       </section>
 
-      {/* ✅ 列表 */}
+      {/*  列表 */}
       {rows.length === 0 ? (
         <p>目前沒有任何會議。</p>
       ) : (
@@ -192,38 +225,41 @@ export default function Admin() {
               <th>日期</th>
               <th>時間</th>
               <th>地點</th>
+              <th>提報人</th>
+              <th>主辦單位</th>
+              <th>參加單位</th>
+              <th>視訊</th>
+              <th>參與人數</th>
               <th>編輯</th>
               <th>刪除</th>
             </tr>
           </thead>
-
           <tbody>
             {rows.map((m) => (
               <tr key={m.id}>
                 <td>{m.name}</td>
                 <td>{m.date}</td>
-
-                {/* ✅ 兼容兩種資料格式：
-                    1) 你 store 的 rows 有 timeLabel
-                    2) search API 回來是 start_time / end_time
-                */}
                 <td>{m.timeLabel || `${m.start_time} - ${m.end_time}`}</td>
-
                 <td>{m.place}</td>
-
+                <td>{m.reporter}</td>
+                <td>{m.unit}</td>
+                <td>{m.people}</td>
+                <td>{(m.isVideo ?? !!m.is_video) ? "是" : "否"}</td>
+                <td>{m.participantCount ?? m.participant_count ?? 0}</td>
                 <td>
                   <button className="btn-edit" onClick={() => handleEdit(m)}>
                     編輯
                   </button>
                 </td>
-
                 <td>
-                  <button
-                    className="btn-delete"
-                    onClick={() => handleDelete(m.id)}
-                  >
-                    刪除
-                  </button>
+                  {!isEndedMeeting(m) && (
+                    <button
+                      className="btn-delete"
+                      onClick={() => handleDelete(m.id)}
+                    >
+                      刪除
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

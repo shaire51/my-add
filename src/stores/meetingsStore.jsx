@@ -99,6 +99,8 @@ export function MeetingsProvider({ children }) {
           people: it.people,
           reporter: it.reporter,
           place: it.place,
+          isVideo: !!it.is_video,
+          participantCount: it.participant_count ?? 0,
           attachments: attachMap.get(String(it.id)) ?? [],
         }));
 
@@ -180,16 +182,28 @@ export function MeetingsProvider({ children }) {
     if (hasConflict(m, meetings)) {
       const place = String(m.place ?? "").trim();
 
-      const alternatives = rooms.filter((r) => r !== place);
+      const alternatives = rooms.filter((r) => {
+        if (r === place) return false;
 
-      // ✅這行是關鍵：把衝突會議找出來
+        return !hasConflict(
+          {
+            ...m,
+            place: r,
+          },
+          meetings,
+        );
+      });
+
       const conflicts = findConflicts(m, meetings);
 
       return {
         ok: false,
-        message: "此會議室在該時段已有會議，無法預約",
+        message:
+          alternatives.length > 0
+            ? "此會議室在該時段已有會議，無法預約"
+            : "此時段兩間會議室皆已被預約",
         alternatives,
-        conflicts, // 或 conflicts: conflicts.slice(0, 3)
+        conflicts,
       };
     }
     return { ok: true };
@@ -255,6 +269,8 @@ export function MeetingsProvider({ children }) {
         people: m.people,
         reporter: m.reporter,
         place: m.place,
+        is_video: m.isVideo ? 1 : 0,
+        participant_count: Number(m.participantCount) || 0,
       };
 
       const res = await fetch(API, {
@@ -269,7 +285,9 @@ export function MeetingsProvider({ children }) {
       // 後端回傳 insertId
       const full = {
         ...m,
-        id: data.id, // ✅ 用後端的 id
+        isVideo: !!m.isVideo,
+        participantCount: Number(m.participantCount) || 0,
+        id: data.id,
         startMin: hhmmToMin(m.start),
         endMin: hhmmToMin(m.end),
         timeLabel: `${m.start}~${m.end}`,
@@ -354,6 +372,8 @@ export function MeetingsProvider({ children }) {
         people: updated.people,
         reporter: updated.reporter,
         place: updated.place,
+        is_video: updated.isVideo ? 1 : 0,
+        participant_count: Number(updated.participantCount) || 0,
       };
 
       const res = await fetch(`${API}/${updated.id}`, {

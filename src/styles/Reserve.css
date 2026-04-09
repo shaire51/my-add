@@ -302,3 +302,78 @@
     max-height: none;
   }
 }
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #333;
+}
+
+.field-label.error {
+  color: #d93025;
+}
+
+.input-error {
+  border: 2px solid #d93025 !important;
+  background: #fff8f8;
+  outline: none;
+}
+
+.input-error:focus {
+  border-color: #d93025 !important;
+  box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.12);
+}
+
+.field-error-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #d93025;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.time-row-error {
+  padding: 8px;
+  border: 2px solid #d93025;
+  border-radius: 10px;
+  background: #fff8f8;
+}
+
+.meeting-time-video-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.meeting-time-video-row .time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.video-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.video-label {
+  width: 88px; /* 固定寬度，避免勾勾跳動 */
+  text-align: right;
+}
+
+.video-check-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.video-check-wrap input[type="checkbox"] {
+  margin: 0;
+}

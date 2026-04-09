@@ -12,6 +12,7 @@
 .admin-table td {
   border-bottom: 1px solid #ddd;
   padding: 12px;
+  text-align: center;
 }
 
 .btn-delete {

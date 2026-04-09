@@ -124,7 +124,7 @@
 .schedule-card {
   background: #ffffff;
   border-radius: 18px;
-  padding: 18px 50px;
+  padding: 1px 1px;
   border: 1px solid #c9c9c9;
   margin-bottom: 10px;
 }
@@ -134,7 +134,7 @@
   display: flex;
   align-items: center;
   text-align: center;
-  gap: 28px;
+  gap: 3px;
 }
 
 /*  每欄：固定不換行 */
@@ -145,7 +145,7 @@
 
 /* 欄位寬度建議固定，排版會很整齊 */
 .schedule-col.title {
-  width: 300px;
+  width: 400px;
 }
 .schedule-col.time {
   width: 400px;
@@ -160,8 +160,8 @@
 
 .schedule-line,
 .schedule-card-title {
-  margin: 0;
-  width: 300px;
+  margin: 5px;
+  width: 250px;
 }
 
 .schedule-col.people {

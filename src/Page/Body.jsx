@@ -71,9 +71,17 @@ export default function Body({ previewFloor = null }) {
               <dt>地點：</dt>
               <dd>{main?.place || "—"}</dd>
             </div>
+            <div className="hero-color">
+              <dt>是否視訊：</dt>
+              <dd>{main ? (main.isVideo ? "是" : "否") : "_"}</dd>
+            </div>
             <div className="hero-row">
-              <dt>參與人員：</dt>
+              <dt>參與單位：</dt>
               <dd>{main?.people || "—"}</dd>
+            </div>
+            <div className="hero-row">
+              <dt>參與人數：</dt>
+              <dd>{main?.participantCount ?? "—"}</dd>
             </div>
           </div>
         </div>
@@ -89,26 +97,21 @@ export default function Body({ previewFloor = null }) {
             allRows.map((m) => (
               <article className="schedule-card" key={m.id}>
                 <div className="schedule-info">
-                  <div className="schedule-col title">
-                    <h4 className="schedule-card-title">會議名稱：{m.name}</h4>
-                    <p className="schedule-line">主辦：{m.unit}</p>
-                  </div>
-
-                  <div className="schedule-col time">
-                    <p className="schedule-line">
-                      日期：{m.date}（{weekdayZh(m.date)}）
-                    </p>
-                    <p className="schedule-line">時間：{m.timeLabel}</p>
-                  </div>
-
-                  <div className="schedule-col meta">
-                    <p className="schedule-line">提報人：{m.reporter}</p>
-                    <p className="schedule-line">地點：{m.place}</p>
-                  </div>
-
-                  <div className="schedule-col people">
-                    <p className="schedule-line">參與：{m.people}</p>
-                  </div>
+                  <h4 className="schedule-card-title">會議名稱：{m.name}</h4>
+                  <p className="schedule-line">主辦單位：{m.unit}</p>
+                  <p className="schedule-line">
+                    日期：{m.date}({weekdayZh(m.date)})
+                  </p>
+                  <p className="schedule-line">時間：{m.timeLabel}</p>
+                  <p className="schedule-line">提報人：{m.reporter}</p>
+                  <p className="schedule-line">地點：{m.place}</p>
+                  <p className="schedule-line">
+                    視訊：{(m.isVideo ?? !!m.is_video) ? "是" : "否"}
+                  </p>
+                  <p className="schedule-line">參與單位：{m.people}</p>
+                  <p className="schedule-line">
+                    參與人數：{m.participantCount}
+                  </p>
                 </div>
               </article>
             ))
