@@ -247,9 +247,11 @@ export default function Admin() {
                 <td>{(m.isVideo ?? !!m.is_video) ? "是" : "否"}</td>
                 <td>{m.participantCount ?? m.participant_count ?? 0}</td>
                 <td>
-                  <button className="btn-edit" onClick={() => handleEdit(m)}>
-                    編輯
-                  </button>
+                  {!isEndedMeeting(m) && (
+                    <button className="btn-edit" onClick={() => handleEdit(m)}>
+                      編輯
+                    </button>
+                  )}
                 </td>
                 <td>
                   {!isEndedMeeting(m) && (

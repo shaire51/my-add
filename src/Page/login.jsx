@@ -32,6 +32,8 @@ export default function Login() {
         return;
       }
 
+      console.log("data.user =", data.user);
+      console.log("data.user.permissions =", data.user?.permissions);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 

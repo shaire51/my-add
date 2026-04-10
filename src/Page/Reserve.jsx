@@ -441,7 +441,6 @@ export default function Reserve() {
                     </label>
                   </div>
                 </div>
-
                 {(errors.start || errors.end) && (
                   <p className="field-error-text">
                     ⚠ {errors.start || errors.end}

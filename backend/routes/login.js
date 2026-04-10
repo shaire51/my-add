@@ -1,6 +1,7 @@
 const express = require("express");
 const ldap = require("ldapjs");
 const jwt = require("jsonwebtoken");
+const pool = require("../db"); // 依你的實際 db 檔案路徑調整
 
 const router = express.Router();
 
@@ -57,7 +58,7 @@ function ldapSearchOne(client, baseDN, filter) {
           "userPrincipalName",
         ],
         sizeLimit: 1,
-        timeLimit: 5, //  LDAP server 端搜尋限制（秒）
+        timeLimit: 5,
         paged: false,
       },
       (err, res) => {
@@ -67,14 +68,9 @@ function ldapSearchOne(client, baseDN, filter) {
           if (!found) found = e;
         });
 
-        //  如果 server 回傳 searchReference 也不要當成 entry
         res.on("searchReference", () => {});
-
         res.on("error", (e) => reject(e));
-        res.on("end", (r) => {
-          // r?.status === 0 表示成功結束
-          resolve(found);
-        });
+        res.on("end", () => resolve(found));
       },
     );
   });
@@ -83,6 +79,7 @@ function ldapSearchOne(client, baseDN, filter) {
 // POST /api/login
 router.post("/", async (req, res) => {
   const { empId, password } = req.body || {};
+
   if (!empId || !password) {
     return res.status(400).json({ message: "缺少帳號或密碼" });
   }
@@ -98,23 +95,22 @@ router.post("/", async (req, res) => {
     reconnect: false,
   });
 
-  // ✅ 避免 ldapjs event 未處理造成 process 噴掉
   client.on("error", () => {});
 
   try {
-    // 1) 先用 SVC 帳號 bind（查詢用）
     await ldapBind(client, SVC_BIND, SVC_PW);
 
-    // 2) 用 sAMAccountName 找使用者
     const safeEmpId = escapeLdapFilterValue(empId);
     const entry = await ldapSearchOne(
       client,
       BASE_DN,
       `(sAMAccountName=${safeEmpId})`,
     );
-    if (!entry) return res.status(401).json({ message: "帳號不存在" });
 
-    // 有些 ldapjs 版本可以從 entry.object 直接拿 DN
+    if (!entry) {
+      return res.status(401).json({ message: "帳號不存在" });
+    }
+
     const userDN =
       getAttr(entry, "distinguishedName") ||
       entry?.object?.distinguishedName ||
@@ -125,32 +121,83 @@ router.post("/", async (req, res) => {
       return res.status(500).json({ message: "找不到 distinguishedName" });
     }
 
-    // 3) 用使用者 DN + 密碼 bind（驗密碼）
     await ldapBind(client, userDN, password);
 
-    // 4) 驗證成功：回傳 user + token
-    //
-    const user = {
+    const ldapUser = {
       empId: getAttr(entry, "sAMAccountName") || empId,
       name: getAttr(entry, "displayName"),
       email: getAttr(entry, "mail"),
       dept: getAttr(entry, "department"),
       upn: getAttr(entry, "userPrincipalName"),
     };
+    console.log("ldapUser =", ldapUser);
 
-    console.log("login user =", user);
-    console.log("user.empId =", user.empId);
-    console.log("user.emp_id =", user.emp_id);
+    const [empRows] = await pool.query(
+      `SELECT id, emp_id, name, role, created_at
+       FROM employees
+       WHERE emp_id = ?
+       LIMIT 1`,
+      [ldapUser.empId],
+    );
+    console.log("empRows =", empRows);
+
+    let employeeId;
+
+    if (!empRows.length) {
+      const [insertResult] = await pool.query(
+        `INSERT INTO employees (emp_id, password, name, role)
+         VALUES (?, '', ?, 'user')`,
+        [ldapUser.empId, ldapUser.name || ldapUser.empId],
+      );
+      employeeId = insertResult.insertId;
+    } else {
+      employeeId = empRows[0].id;
+    }
+    console.log("employeeId =", employeeId);
+
+    const [permissionRows] = await pool.query(
+      `SELECT p.code
+       FROM employee_permissions ep
+       INNER JOIN permissions p ON p.id = ep.permission_id
+       WHERE ep.employee_id = ?`,
+      [employeeId],
+    );
+    console.log("permissionRows =", permissionRows);
+
+    const permissions = [
+      ...new Set(permissionRows.map((r) => r.code).filter(Boolean)),
+    ];
+    console.log("permissions =", permissions);
+
+    const user = {
+      empId: ldapUser.empId,
+      name: ldapUser.name,
+      email: ldapUser.email,
+      dept: ldapUser.dept,
+      upn: ldapUser.upn,
+      permissions,
+    };
+    console.log("user =", user);
 
     const token = jwt.sign(
-      { name: user.name, email: user.email, dept: user.dept },
+      {
+        name: user.name,
+        email: user.email,
+        dept: user.dept,
+        permissions: user.permissions,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "8h", subject: user.empId },
     );
 
-    return res.json({ message: "登入成功", user, token });
+    return res.json({
+      message: "登入成功",
+      user,
+      token,
+    });
   } catch (err) {
-    // ✅ ldapjs 常見：err.name / err.code / err.lde_message
+    console.error("login error =", err);
+
     const name = String(err?.name || "");
     const code = String(err?.code || "");
     const msg = String(err?.message || "");
@@ -166,7 +213,6 @@ router.post("/", async (req, res) => {
       .status(401)
       .json({ message: badPw ? "密碼錯誤" : "LDAP 登入失敗" });
   } finally {
-    // ✅ unbind 是 async callback，保守做法用 destroy 避免卡住
     try {
       client.unbind();
     } catch {}
