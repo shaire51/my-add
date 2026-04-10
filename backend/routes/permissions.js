@@ -2,9 +2,12 @@ const express = require("express");
 const pool = require("../db");
 const requireAuth = require("../middleware/requireAuth");
 const requirePermission = require("../middleware/requirePermission");
-
+const ldap = require("ldapjs");
 const router = express.Router();
-
+const LDAP_URL = process.env.LDAP_URL;
+const BASE_DN = process.env.LDAP_BASE_DN;
+const SVC_BIND = process.env.LDAP_SVC_BIND;
+const SVC_PW = process.env.LDAP_SVC_PASSWORD;
 // 查某員工目前權限
 router.get(
   "/user/:empId",
@@ -14,16 +17,11 @@ router.get(
     try {
       const { empId } = req.params;
 
-      const [empRows] = await pool.query(
-        "SELECT id, emp_id, name FROM employees WHERE emp_id = ? LIMIT 1",
-        [empId],
-      );
+      const employee = await findOrCreateEmployeeByEmpId(empId);
 
-      if (!empRows.length) {
+      if (!employee) {
         return res.status(404).json({ message: "找不到該員工" });
       }
-
-      const employee = empRows[0];
 
       const [permissionRows] = await pool.query(
         `SELECT p.code, p.name, ep.granted_by, ep.granted_at
@@ -163,5 +161,130 @@ router.post(
     }
   },
 );
+
+function getAttr(entry, name) {
+  const a = entry?.attributes?.find((x) => x.type === name);
+  return a?.values?.[0] ?? a?.vals?.[0] ?? "";
+}
+
+function escapeLdapFilterValue(v = "") {
+  return String(v).replace(/[\\()*\0]/g, (ch) => {
+    switch (ch) {
+      case "\\":
+        return "\\5c";
+      case "*":
+        return "\\2a";
+      case "(":
+        return "\\28";
+      case ")":
+        return "\\29";
+      case "\0":
+        return "\\00";
+      default:
+        return ch;
+    }
+  });
+}
+
+function ldapBind(client, dn, pw) {
+  return new Promise((resolve, reject) => {
+    client.bind(dn, pw, (err) => (err ? reject(err) : resolve()));
+  });
+}
+
+function ldapSearchOne(client, baseDN, filter) {
+  return new Promise((resolve, reject) => {
+    let found = null;
+
+    client.search(
+      baseDN,
+      {
+        scope: "sub",
+        filter,
+        attributes: [
+          "distinguishedName",
+          "displayName",
+          "mail",
+          "department",
+          "sAMAccountName",
+          "userPrincipalName",
+        ],
+        sizeLimit: 1,
+        timeLimit: 5,
+        paged: false,
+      },
+      (err, res) => {
+        if (err) return reject(err);
+
+        res.on("searchEntry", (e) => {
+          if (!found) found = e;
+        });
+
+        res.on("searchReference", () => {});
+        res.on("error", (e) => reject(e));
+        res.on("end", () => resolve(found));
+      },
+    );
+  });
+}
+
+async function findOrCreateEmployeeByEmpId(empId) {
+  const [empRows] = await pool.query(
+    "SELECT id, emp_id, name FROM employees WHERE emp_id = ? LIMIT 1",
+    [empId],
+  );
+
+  if (empRows.length) {
+    return empRows[0];
+  }
+
+  const client = ldap.createClient({
+    url: LDAP_URL,
+    timeout: 5000,
+    connectTimeout: 5000,
+    reconnect: false,
+  });
+
+  client.on("error", () => {});
+
+  try {
+    await ldapBind(client, SVC_BIND, SVC_PW);
+
+    const safeEmpId = escapeLdapFilterValue(empId);
+    const entry = await ldapSearchOne(
+      client,
+      BASE_DN,
+      `(sAMAccountName=${safeEmpId})`,
+    );
+
+    if (!entry) {
+      return null;
+    }
+
+    const ldapUser = {
+      empId: getAttr(entry, "sAMAccountName") || empId,
+      name: getAttr(entry, "displayName") || empId,
+    };
+
+    const [insertResult] = await pool.query(
+      `INSERT INTO employees (emp_id, password, name, role)
+       VALUES (?, '', ?, 'user')`,
+      [ldapUser.empId, ldapUser.name],
+    );
+
+    return {
+      id: insertResult.insertId,
+      emp_id: ldapUser.empId,
+      name: ldapUser.name,
+    };
+  } finally {
+    try {
+      client.unbind();
+    } catch {}
+    try {
+      client.destroy();
+    } catch {}
+  }
+}
 
 module.exports = router;

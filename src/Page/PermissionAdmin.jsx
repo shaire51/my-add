@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "../stores/AuthContext.jsx";
+import "../styles/PermissionAdmin.css";
 
 const API_BASE = "http://192.168.76.165:3001";
 
@@ -175,7 +176,7 @@ export default function PermissionAdmin() {
 
   if (!canView) {
     return (
-      <main style={{ padding: "24px" }}>
+      <main className="permission-page permission-page--denied">
         <h2>權限管理</h2>
         <p>你沒有權限查看此頁面。</p>
       </main>
@@ -183,92 +184,56 @@ export default function PermissionAdmin() {
   }
 
   return (
-    <main style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: "16px" }}>權限管理</h2>
+    <main className="permission-page">
+      <h2 className="permission-page__title">權限管理</h2>
 
-      <form
-        onSubmit={handleSearch}
-        style={{
-          display: "flex",
-          gap: "12px",
-          alignItems: "center",
-          flexWrap: "wrap",
-          marginBottom: "20px",
-        }}
-      >
+      <form className="permission-search-form" onSubmit={handleSearch}>
         <input
           type="text"
           placeholder="請輸入員工編號"
           value={empId}
           onChange={(e) => setEmpId(e.target.value)}
-          style={{
-            padding: "10px 12px",
-            minWidth: "220px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-          }}
+          className="permission-input"
         />
+
         <button
           type="submit"
           disabled={loading}
-          style={{
-            padding: "10px 16px",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
+          className="permission-btn permission-btn--primary"
         >
           {loading ? "查詢中..." : "查詢"}
         </button>
       </form>
 
-      {msg && <p style={{ color: "green" }}>{msg}</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {msg && (
+        <p className="permission-message permission-message--success">{msg}</p>
+      )}
+      {error && (
+        <p className="permission-message permission-message--error">{error}</p>
+      )}
 
       {employee && (
-        <section
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "12px",
-            padding: "16px",
-            marginTop: "16px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>員工資料</h3>
+        <section className="permission-card">
+          <h3 className="permission-card__title">員工資料</h3>
           <p>員工編號：{employee.empId}</p>
           <p>姓名：{employee.name}</p>
 
-          <hr style={{ margin: "16px 0" }} />
+          <hr className="permission-divider" />
 
-          <h3>目前權限</h3>
+          <h3 className="permission-card__title">目前權限</h3>
+
           {permissions.length === 0 ? (
             <p>目前沒有任何權限</p>
           ) : (
-            <div style={{ display: "grid", gap: "10px" }}>
+            <div className="permission-list">
               {permissions.map((item) => (
-                <div
-                  key={item.code}
-                  style={{
-                    border: "1px solid #e5e5e5",
-                    borderRadius: "10px",
-                    padding: "12px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "12px",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div key={item.code} className="permission-item">
                   <div>
                     <div>
                       <strong>{item.name}</strong>
                     </div>
-                    <div style={{ fontSize: "14px", color: "#666" }}>
-                      {item.code}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "#888" }}>
-                      賦予者：{item.granted_by || "-"} ／ 時間：
-                      {item.granted_at || "-"}
+                    <div className="permission-item__meta">
+                      賦予者：{item.granted_by || "-"}
                     </div>
                   </div>
 
@@ -277,12 +242,7 @@ export default function PermissionAdmin() {
                       type="button"
                       onClick={() => handleRevoke(item.code)}
                       disabled={saving}
-                      style={{
-                        padding: "8px 14px",
-                        borderRadius: "8px",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
+                      className="permission-btn permission-btn--danger"
                     >
                       移除
                     </button>
@@ -294,27 +254,15 @@ export default function PermissionAdmin() {
 
           {canAssign && (
             <>
-              <hr style={{ margin: "20px 0" }} />
+              <hr className="permission-divider" />
 
-              <h3>新增權限</h3>
+              <h3 className="permission-card__title">新增權限</h3>
 
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="permission-action-row">
                 <select
                   value={selectedPermission}
                   onChange={(e) => setSelectedPermission(e.target.value)}
-                  style={{
-                    padding: "10px 12px",
-                    minWidth: "260px",
-                    border: "1px solid #ccc",
-                    borderRadius: "8px",
-                  }}
+                  className="permission-select"
                 >
                   <option value="">請選擇權限</option>
                   {availableOptions.map((item) => (
@@ -328,12 +276,7 @@ export default function PermissionAdmin() {
                   type="button"
                   onClick={handleGrant}
                   disabled={saving || !selectedPermission}
-                  style={{
-                    padding: "10px 16px",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                  }}
+                  className="permission-btn permission-btn--primary"
                 >
                   {saving ? "處理中..." : "新增權限"}
                 </button>

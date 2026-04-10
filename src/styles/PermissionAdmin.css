@@ -1,0 +1,117 @@
+.permission-page {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.permission-page--denied {
+  max-width: none;
+  margin: 0;
+}
+
+.permission-page__title {
+  margin-bottom: 16px;
+}
+
+.permission-search-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.permission-input,
+.permission-select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.permission-input {
+  min-width: 220px;
+}
+
+.permission-select {
+  min-width: 260px;
+}
+
+.permission-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.permission-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.permission-btn--primary {
+  background: #1976d2;
+  color: #fff;
+}
+
+.permission-btn--danger {
+  background: #d32f2f;
+  color: #fff;
+  padding: 8px 14px;
+}
+
+.permission-message {
+  margin: 8px 0;
+}
+
+.permission-message--success {
+  color: green;
+}
+
+.permission-message--error {
+  color: red;
+}
+
+.permission-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.permission-card__title {
+  margin-top: 0;
+}
+
+.permission-divider {
+  margin: 16px 0;
+}
+
+.permission-list {
+  display: grid;
+  gap: 10px;
+}
+
+.permission-item {
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.permission-item__meta {
+  font-size: 13px;
+  color: #888;
+}
+
+.permission-action-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
