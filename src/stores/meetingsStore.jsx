@@ -101,6 +101,7 @@ export function MeetingsProvider({ children }) {
           place: it.place,
           isVideo: !!it.is_video,
           participantCount: it.participant_count ?? 0,
+          created_by: it.created_by,
           attachments: attachMap.get(String(it.id)) ?? [],
         }));
 

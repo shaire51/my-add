@@ -6,7 +6,6 @@ import Foot from "./components/Foot.jsx";
 import Admin from "./Page/admin.jsx";
 import Login from "./Page/login.jsx";
 import PermissionAdmin from "./Page/PermissionAdmin.jsx";
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { MeetingsProvider } from "./stores/meetingsStore.jsx";
@@ -20,7 +19,6 @@ function App() {
         <BrowserRouter>
           <div className="board">
             <Nav />
-
             <Routes>
               <Route path="/" element={<Body />} />
               <Route //分配路徑
@@ -32,7 +30,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/admin"
                 element={
@@ -41,15 +38,13 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route path="/admin" element={<Admin />} />
               <Route path="/login" element={<Login />} />
-
               {/* 投影頁（不用登入） */}
               <Route path="/screen/2" element={<Body previewFloor={2} />} />
               <Route path="/screen/5" element={<Body previewFloor={5} />} />
               {/* 權限 */}
-              <Route path="/permission-admin" element={<PermissionAdmin />} />
+              <Route path="/permissions" element={<PermissionAdmin />} />
             </Routes>
 
             <Foot />

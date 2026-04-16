@@ -12,11 +12,10 @@ const SVC_PW = process.env.LDAP_SVC_PASSWORD;
 router.get(
   "/user/:empId",
   requireAuth,
-  requirePermission("permission.manage.view"),
+  requirePermission("permission.assign.admin"),
   async (req, res) => {
     try {
       const { empId } = req.params;
-
       const employee = await findOrCreateEmployeeByEmpId(empId);
 
       if (!employee) {
@@ -50,7 +49,7 @@ router.get(
 router.post(
   "/grant",
   requireAuth,
-  requirePermission("permission.assign"),
+  requirePermission("permission.assign.admin"),
   async (req, res) => {
     try {
       const { empId, permissionCode } = req.body || {};
@@ -80,17 +79,13 @@ router.post(
       }
 
       // 如果要賦予管理權限，必須額外有 permission.assign.admin
-      const adminLevelPermissions = [
-        "meeting.admin",
-        "permission.assign",
-        "permission.assign.admin",
-        "permission.manage.view",
-      ];
+      const adminLevelPermissions = ["permission.assign.admin"];
+
       if (
         adminLevelPermissions.includes(permissionCode) &&
         !req.user.permissions?.includes("permission.assign.admin")
       ) {
-        return res.status(403).json({ message: "沒有賦予高階權限的資格" });
+        return res.status(403).json({ message: "沒有賦予管理權限的資格" });
       }
 
       await pool.query(
@@ -115,7 +110,7 @@ router.post(
 router.post(
   "/revoke",
   requireAuth,
-  requirePermission("permission.assign"),
+  requirePermission("permission.assign.admin"),
   async (req, res) => {
     try {
       const { empId, permissionCode } = req.body || {};

@@ -5,10 +5,7 @@ import "../styles/PermissionAdmin.css";
 const API_BASE = "http://192.168.76.165:3001";
 
 const PERMISSION_OPTIONS = [
-  { code: "permission.manage.view", name: "查看權限管理頁" },
-  { code: "permission.assign", name: "賦予一般權限" },
   { code: "permission.assign.admin", name: "賦予管理權限" },
-  { code: "meeting.admin", name: "會議管理員" },
   { code: "option.other.view", name: "查看其他選項" },
 ];
 
@@ -27,8 +24,7 @@ export default function PermissionAdmin() {
 
   const token = localStorage.getItem("token");
 
-  const canView = user?.permissions?.includes("permission.manage.view");
-  const canAssign = user?.permissions?.includes("permission.assign");
+  const isAdmin = user?.permissions?.includes("permission.assign.admin");
 
   const existingCodes = useMemo(
     () => permissions.map((p) => p.code),
@@ -174,7 +170,7 @@ export default function PermissionAdmin() {
     }
   };
 
-  if (!canView) {
+  if (!isAdmin) {
     return (
       <main className="permission-page permission-page--denied">
         <h2>權限管理</h2>
@@ -237,7 +233,7 @@ export default function PermissionAdmin() {
                     </div>
                   </div>
 
-                  {canAssign && (
+                  {isAdmin && (
                     <button
                       type="button"
                       onClick={() => handleRevoke(item.code)}
@@ -252,7 +248,7 @@ export default function PermissionAdmin() {
             </div>
           )}
 
-          {canAssign && (
+          {isAdmin && (
             <>
               <hr className="permission-divider" />
 

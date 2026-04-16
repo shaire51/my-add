@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-
+import { useAuth } from "../stores/AuthContext.jsx";
 import { useMeetings } from "../stores/meetingsStore.jsx";
 import "../styles/admin.css";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ const API_BASE = "http://192.168.76.165:3001";
 const API = `${API_BASE}/api/meetings`;
 
 export default function Admin() {
+  const { user } = useAuth();
   const { toNotStartedRows, deleteMeeting } = useMeetings();
   const baseRows = toNotStartedRows();
   const navigate = useNavigate();
@@ -122,6 +123,30 @@ export default function Admin() {
   const isEndedMeeting = (m) => {
     const end = new Date(`${m.date}T${m.end_time || "00:00"}:00`);
     return end.getTime() < Date.now();
+  };
+
+  const isAdmin = user?.permissions?.includes("permission.assign.admin");
+
+  const isOwner = (m) => {
+    const owner = String(m.created_by || "")
+      .trim()
+      .toLowerCase();
+    const sub = String(user?.empId || user?.sub || "")
+      .trim()
+      .toLowerCase();
+
+    console.log("m.created_by =", m.created_by);
+    console.log("user.empId =", user?.empId);
+    console.log("user.sub =", user?.sub);
+    console.log("owner =", owner);
+    console.log("sub =", sub);
+
+    return owner === sub;
+  };
+
+  const canEditOrDelete = (m) => {
+    if (isEndedMeeting(m)) return false;
+    return isAdmin || isOwner(m);
   };
 
   return (
@@ -247,14 +272,14 @@ export default function Admin() {
                 <td>{(m.isVideo ?? !!m.is_video) ? "是" : "否"}</td>
                 <td>{m.participantCount ?? m.participant_count ?? 0}</td>
                 <td>
-                  {!isEndedMeeting(m) && (
+                  {canEditOrDelete(m) && (
                     <button className="btn-edit" onClick={() => handleEdit(m)}>
                       編輯
                     </button>
                   )}
                 </td>
                 <td>
-                  {!isEndedMeeting(m) && (
+                  {canEditOrDelete(m) && (
                     <button
                       className="btn-delete"
                       onClick={() => handleDelete(m.id)}

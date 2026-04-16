@@ -9,6 +9,10 @@ export default function Nav() {
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
 
+  const isAdmin = user?.permissions?.includes("permission.assign.admin");
+  const canSeeOthers =
+    user?.permissions?.includes("option.other.view") || isAdmin;
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -18,21 +22,20 @@ export default function Nav() {
 
   return (
     <nav className="nav">
-      {/* 左側 Logo */}
       <div className="nav-left">
         <Link to="/">
           <img src="/沙灘.jpg" alt="logo" className="logo" />
         </Link>
       </div>
 
-      {/* 中間選單 */}
-
       <div className="nav-center">
         <Link to="/">會議排程</Link>
         <Link to="/reserve">會議預約</Link>
         <Link to="/admin">會議管理</Link>
 
-        {user?.permissions?.includes("option.other.view") && (
+        {isAdmin && <Link to="/permissions">權限管理</Link>}
+
+        {canSeeOthers && (
           <div className="dropdown">
             <button className="dropdown-btn">其他</button>
 
@@ -79,12 +82,8 @@ export default function Nav() {
             </div>
           </div>
         )}
-        {user?.permissions?.includes("permission.manage.view") && (
-          <Link to="/permission-admin">權限管理</Link>
-        )}
       </div>
 
-      {/* 右側登入區 */}
       <div className="nav-right">
         {user ? (
           <div

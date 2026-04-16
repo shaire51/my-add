@@ -4,15 +4,9 @@ const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
 
-const ADMIN_IDS = new Set(["41414", "tcitadmin", ""]);
-
 function isAdmin(user) {
-  const sub = String(user?.sub || "")
-    .trim()
-    .toLowerCase();
-  return ADMIN_IDS.has(sub);
+  return !!user?.permissions?.includes("permission.assign.admin");
 }
-
 function canEditOrDelete(ownerEmpId, user) {
   const owner = String(ownerEmpId || "").trim();
   const sub = String(user?.sub || "").trim();
@@ -29,17 +23,18 @@ router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`
   SELECT 
-    id,
-    name,
-    unit,
-    DATE_FORMAT(date, '%Y-%m-%d') AS date,
-    TIME_FORMAT(start_time, '%H:%i') AS start_time,
-    TIME_FORMAT(end_time, '%H:%i') AS end_time,
-    people,
-    reporter,
-    place,
-    is_video,
-    participant_count
+  id,
+  name,
+  unit,
+  DATE_FORMAT(date, '%Y-%m-%d') AS date,
+  TIME_FORMAT(start_time, '%H:%i') AS start_time,
+  TIME_FORMAT(end_time, '%H:%i') AS end_time,
+  people,
+  reporter,
+  place,
+  is_video,
+  participant_count,
+  created_by
   FROM meetings
     `);
 
@@ -103,19 +98,20 @@ router.get("/search", async (req, res) => {
   try {
     const [rows] = await pool.query(
       `
-    SELECT 
-      id,
-      name,
-      unit,
-      DATE_FORMAT(date, '%Y-%m-%d') AS date,
-      TIME_FORMAT(start_time, '%H:%i') AS start_time,
-      TIME_FORMAT(end_time, '%H:%i') AS end_time,
-      people,
-      reporter,
-      place,
-      is_video,
-      participant_count
-    FROM meetings
+  SELECT 
+  id,
+  name,
+  unit,
+  DATE_FORMAT(date, '%Y-%m-%d') AS date,
+  TIME_FORMAT(start_time, '%H:%i') AS start_time,
+  TIME_FORMAT(end_time, '%H:%i') AS end_time,
+  people,
+  reporter,
+  place,
+  is_video,
+  participant_count,
+  created_by
+  FROM meetings
   ${where}
   ORDER BY date ASC, start_time ASC
   `,
