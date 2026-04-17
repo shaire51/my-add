@@ -9,16 +9,6 @@ import { reserveSchema } from "../schemas/reserveSchema.js";
 const pad2 = (n) => String(n).padStart(2, "0");
 const API_BASE = "http://192.168.76.165:3001";
 
-// 把檔案讀成 base64，之後 Body 要做預覽／下載用
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result);
-    fr.onerror = reject;
-    fr.readAsDataURL(file);
-  });
-}
-
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
@@ -191,7 +181,6 @@ export default function Reserve() {
 
     setErrors({});
 
-    // 檔案格式檢查（一定要在讀檔前）
     if (form.file) {
       const allowedTypes = ["image/jpeg", "image/png", "image/tiff"];
       const allowedExt = ["jpg", "jpeg", "png", "tif", "tiff"];
@@ -208,35 +197,22 @@ export default function Reserve() {
       }
     }
 
-    // 處理附件（通過檢查後才讀）
-    let attachments = [];
-    if (form.file) {
-      const dataUrl = await readFileAsDataURL(form.file);
-      attachments = [
-        {
-          name: form.file.name,
-          type: form.file.type,
-          size: form.file.size,
-          dataUrl,
-        },
-      ];
-    }
+    const meetingForCheck = {
+      id: form.id,
+      name: form.name.trim(),
+      unit: form.unit.trim(),
+      date: form.date,
+      start: form.start,
+      end: form.end,
+      people: form.people.trim(),
+      reporter: user.name,
+      place: form.place.trim(),
+      isVideo: form.isVideo,
+      participantCount: Number(form.participantCount) || 0,
+    };
 
     try {
-      // 時段衝突檢查
-      const check = canAddMeeting({
-        id: form.id,
-        name: form.name.trim(),
-        unit: form.unit.trim(),
-        date: form.date,
-        start: form.start,
-        end: form.end,
-        people: form.people.trim(),
-        reporter: user.name,
-        place: form.place.trim(),
-        isVideo: form.isVideo,
-        participantCount: Number(form.participantCount) || 0,
-      });
+      const check = canAddMeeting(meetingForCheck);
 
       if (!check.ok) {
         setMsg({ type: "error", text: check.message });
@@ -245,21 +221,24 @@ export default function Reserve() {
         return;
       }
 
+      const fd = new FormData();
+      fd.append("name", form.name.trim());
+      fd.append("unit", form.unit.trim());
+      fd.append("date", form.date);
+      fd.append("start_time", form.start);
+      fd.append("end_time", form.end);
+      fd.append("people", form.people.trim());
+      fd.append("reporter", user.name);
+      fd.append("place", form.place.trim());
+      fd.append("is_video", form.isVideo ? 1 : 0);
+      fd.append("participant_count", Number(form.participantCount) || 0);
+
+      if (form.file) {
+        fd.append("attachment", form.file);
+      }
+
       if (isEdit) {
-        const r = await updateMeeting({
-          id: form.id,
-          name: form.name.trim(),
-          unit: form.unit.trim(),
-          date: form.date,
-          start: form.start,
-          end: form.end,
-          people: form.people.trim(),
-          reporter: user.name,
-          place: form.place.trim(),
-          isVideo: form.isVideo,
-          participantCount: Number(form.participantCount) || 0,
-          attachments,
-        });
+        const r = await updateMeeting(form.id, fd);
 
         if (!r.ok) {
           setMsg({ type: "error", text: r.message || "更新失敗" });
@@ -271,19 +250,7 @@ export default function Reserve() {
         return;
       }
 
-      const r = await addMeeting({
-        name: form.name.trim(),
-        unit: form.unit.trim(),
-        date: form.date,
-        start: form.start,
-        end: form.end,
-        people: form.people.trim(),
-        reporter: user.name,
-        place: form.place.trim(),
-        isVideo: form.isVideo,
-        participantCount: Number(form.participantCount) || 0,
-        attachments,
-      });
+      const r = await addMeeting(fd, meetingForCheck);
 
       if (!r.ok) {
         setMsg({ type: "error", text: r.message || "新增失敗" });

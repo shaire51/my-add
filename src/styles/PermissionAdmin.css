@@ -1,48 +1,120 @@
 .permission-page {
-  padding: 24px;
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 980px;
+  margin: 32px auto;
+  padding: 32px 24px 48px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+  border-radius: 24px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .permission-page--denied {
-  max-width: none;
+  max-width: 720px;
+  margin: 48px auto;
+  padding: 40px 24px;
+  text-align: center;
+  background: linear-gradient(180deg, #fff8f8 0%, #fff2f2 100%);
+  border: 1px solid #ffd7d7;
+  border-radius: 24px;
+  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.08);
+}
+
+.permission-page--denied h2 {
+  margin-bottom: 10px;
+  font-size: 28px;
+  color: #b91c1c;
+}
+
+.permission-page--denied p {
   margin: 0;
+  font-size: 15px;
+  color: #7f1d1d;
 }
 
 .permission-page__title {
-  margin-bottom: 16px;
+  margin: 0 0 24px;
+  font-size: 30px;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.permission-page__title::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1976d2, #64b5f6);
 }
 
 .permission-search-form {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   flex-wrap: wrap;
+  padding: 18px;
   margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e8eef5;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
 .permission-input,
 .permission-select {
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #d7e1ec;
+  border-radius: 12px;
+  background: #fff;
   font-size: 14px;
+  color: #1e293b;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.permission-input::placeholder {
+  color: #94a3b8;
+}
+
+.permission-input:focus,
+.permission-select:focus {
+  border-color: #42a5f5;
+  box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.16);
 }
 
 .permission-input {
-  min-width: 220px;
+  min-width: 240px;
+  flex: 1 1 260px;
 }
 
 .permission-select {
-  min-width: 260px;
+  min-width: 300px;
+  flex: 1 1 320px;
 }
 
 .permission-btn {
-  padding: 10px 16px;
+  height: 46px;
+  padding: 0 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 700;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease,
+    background 0.2s ease;
+}
+
+.permission-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .permission-btn:disabled {
@@ -51,67 +123,164 @@
 }
 
 .permission-btn--primary {
-  background: #1976d2;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
   color: #fff;
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.22);
+}
+
+.permission-btn--primary:hover:not(:disabled) {
+  box-shadow: 0 12px 24px rgba(25, 118, 210, 0.28);
 }
 
 .permission-btn--danger {
-  background: #d32f2f;
+  background: linear-gradient(135deg, #d32f2f, #ef5350);
   color: #fff;
-  padding: 8px 14px;
+  min-width: 88px;
+  height: 40px;
+  padding: 0 14px;
+  box-shadow: 0 8px 18px rgba(211, 47, 47, 0.2);
+}
+
+.permission-btn--danger:hover:not(:disabled) {
+  box-shadow: 0 12px 22px rgba(211, 47, 47, 0.26);
 }
 
 .permission-message {
-  margin: 8px 0;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .permission-message--success {
-  color: green;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
 }
 
 .permission-message--error {
-  color: red;
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
 }
 
 .permission-card {
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
+  margin-top: 22px;
+  padding: 24px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #e8eef5;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
 }
 
 .permission-card__title {
-  margin-top: 0;
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.permission-card p {
+  margin: 8px 0;
+  font-size: 15px;
+  color: #334155;
 }
 
 .permission-divider {
-  margin: 16px 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #dbe4ee, transparent);
+  margin: 22px 0;
 }
 
 .permission-list {
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
 .permission-item {
-  border: 1px solid #e5e5e5;
-  border-radius: 10px;
-  padding: 12px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid #e5edf5;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.permission-item:hover {
+  transform: translateY(-2px);
+  border-color: #cfe3f8;
+  box-shadow: 0 10px 22px rgba(25, 118, 210, 0.08);
+}
+
+.permission-item strong {
+  font-size: 16px;
+  color: #0f172a;
 }
 
 .permission-item__meta {
+  margin-top: 6px;
   font-size: 13px;
-  color: #888;
+  color: #64748b;
 }
 
 .permission-action-row {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   flex-wrap: wrap;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: 1px solid #e6eef8;
+}
+
+@media (max-width: 768px) {
+  .permission-page {
+    margin: 20px 12px;
+    padding: 24px 16px 32px;
+    border-radius: 18px;
+  }
+
+  .permission-page__title {
+    font-size: 24px;
+  }
+
+  .permission-search-form,
+  .permission-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .permission-input,
+  .permission-select,
+  .permission-btn {
+    width: 100%;
+  }
+
+  .permission-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .permission-btn--danger {
+    width: 100%;
+  }
+}
+
+.permission-employee-info {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #f8fbff;
+  border: 1px solid #e6eef8;
+  border-radius: 14px;
 }

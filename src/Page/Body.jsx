@@ -24,15 +24,17 @@ export default function Body({ previewFloor = null }) {
   const main = activeRows[0] || null;
   const attachment = main?.attachments?.[0] || null;
   const isImage = attachment?.type?.startsWith("image/");
-  const hasImage = Boolean(isImage && attachment?.dataUrl);
-
+  const hasImage = Boolean(isImage && (attachment?.url || attachment?.dataUrl));
+  console.log("previewFloor =", previewFloor);
+  console.log("main =", main);
+  console.log("main.attachments =", main?.attachments);
   return (
     <main className="main">
       <section className={`hero ${!hasImage ? "no-image" : ""}`}>
         {hasImage && (
           <div className="hero-image">
             <img
-              src={attachment.dataUrl}
+              src={attachment.url || attachment.dataUrl}
               alt={attachment.name}
               className="hero-img"
             />

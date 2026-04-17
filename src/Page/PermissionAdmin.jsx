@@ -211,8 +211,16 @@ export default function PermissionAdmin() {
       {employee && (
         <section className="permission-card">
           <h3 className="permission-card__title">員工資料</h3>
-          <p>員工編號：{employee.empId}</p>
-          <p>姓名：{employee.name}</p>
+          <div className="permission-employee-info">
+            <p>
+              <strong>員工編號：</strong>
+              {employee.empId}
+            </p>
+            <p>
+              <strong>姓名：</strong>
+              {employee.name}
+            </p>
+          </div>
 
           <hr className="permission-divider" />
 

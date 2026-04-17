@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const meetingRoutes = require("./routes/meetings");
@@ -11,6 +12,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/login", loginRouter);
@@ -18,5 +20,5 @@ app.use("/api/meetings", requireAuth, meetingRoutes);
 app.use("/api/permissions", require("./routes/permissions"));
 
 app.listen(3001, () => {
-  console.log(" Server running on http://localhost:3001");
+  console.log("Server running on http://localhost:3001");
 });

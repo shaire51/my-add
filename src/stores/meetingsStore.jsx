@@ -81,33 +81,34 @@ export function MeetingsProvider({ children }) {
 
       const list = await res.json();
 
-      setMeetings((prev) => {
-        const attachMap = new Map(
-          prev.map((m) => [String(m.id), m.attachments || []]),
-        );
+      const converted = (Array.isArray(list) ? list : []).map((it) => ({
+        id: it.id,
+        name: it.name,
+        unit: it.unit,
+        date: it.date,
+        start: it.start_time,
+        end: it.end_time,
+        startMin: hhmmToMin(it.start_time),
+        endMin: hhmmToMin(it.end_time),
+        timeLabel: `${it.start_time}~${it.end_time}`,
+        people: it.people,
+        reporter: it.reporter,
+        place: it.place,
+        isVideo: !!it.is_video,
+        participantCount: it.participant_count ?? 0,
+        created_by: it.created_by,
+        attachments: it.attachment_path
+          ? [
+              {
+                name: it.attachment_name,
+                type: it.attachment_type,
+                url: `${API_BASE}${it.attachment_path}`,
+              },
+            ]
+          : [],
+      }));
 
-        const converted = (Array.isArray(list) ? list : []).map((it) => ({
-          id: it.id,
-          name: it.name,
-          unit: it.unit,
-          date: it.date,
-          start: it.start_time,
-          end: it.end_time,
-          startMin: hhmmToMin(it.start_time),
-          endMin: hhmmToMin(it.end_time),
-          timeLabel: `${it.start_time}~${it.end_time}`,
-          people: it.people,
-          reporter: it.reporter,
-          place: it.place,
-          isVideo: !!it.is_video,
-          participantCount: it.participant_count ?? 0,
-          created_by: it.created_by,
-          attachments: attachMap.get(String(it.id)) ?? [],
-        }));
-
-        return converted;
-      });
-
+      setMeetings(converted);
       return { ok: true };
     } catch (err) {
       if (!silent) console.error("reloadMeetings error:", err);
@@ -253,48 +254,24 @@ export function MeetingsProvider({ children }) {
   }
 
   // 新增會議（加入前端 store）
-  async function addMeeting(m) {
-    const check = canAddMeeting(m);
+  async function addMeeting(formData, checkMeeting) {
+    const check = canAddMeeting(checkMeeting);
     if (!check.ok) return check;
 
     const token = localStorage.getItem("token");
     if (!token) return { ok: false, message: "未登入" };
 
     try {
-      const payload = {
-        name: m.name,
-        unit: m.unit,
-        date: m.date,
-        start_time: m.start,
-        end_time: m.end,
-        people: m.people,
-        reporter: m.reporter,
-        place: m.place,
-        is_video: m.isVideo ? 1 : 0,
-        participant_count: Number(m.participantCount) || 0,
-      };
-
       const res = await fetch(API, {
         method: "POST",
-        headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(payload),
+        headers: authHeaders(),
+        body: formData,
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return { ok: false, message: data.message || "新增失敗" };
 
-      // 後端回傳 insertId
-      const full = {
-        ...m,
-        isVideo: !!m.isVideo,
-        participantCount: Number(m.participantCount) || 0,
-        id: data.id,
-        startMin: hhmmToMin(m.start),
-        endMin: hhmmToMin(m.end),
-        timeLabel: `${m.start}~${m.end}`,
-      };
-
-      setMeetings((prev) => [...prev, full]);
+      await reloadMeetings();
       return { ok: true };
     } catch (err) {
       return { ok: false, message: "無法連線到伺服器" };
@@ -359,53 +336,21 @@ export function MeetingsProvider({ children }) {
     );
   }
 
-  async function updateMeeting(updated) {
+  async function updateMeeting(id, formData) {
     const token = localStorage.getItem("token");
     if (!token) return { ok: false, message: "未登入" };
 
     try {
-      const payload = {
-        name: updated.name,
-        unit: updated.unit,
-        date: updated.date,
-        start_time: updated.start,
-        end_time: updated.end,
-        people: updated.people,
-        reporter: updated.reporter,
-        place: updated.place,
-        is_video: updated.isVideo ? 1 : 0,
-        participant_count: Number(updated.participantCount) || 0,
-      };
-
-      const res = await fetch(`${API}/${updated.id}`, {
+      const res = await fetch(`${API}/${id}`, {
         method: "PUT",
-        headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(payload),
+        headers: authHeaders(),
+        body: formData,
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return { ok: false, message: data.message || "更新失敗" };
 
-      // 後端成功後才更新前端
-      setMeetings((prev) =>
-        prev.map((m) => {
-          if (m.id !== updated.id) return m;
-
-          const start = updated.start ?? m.start;
-          const end = updated.end ?? m.end;
-
-          return {
-            ...m,
-            ...updated,
-            start,
-            end,
-            startMin: hhmmToMin(start),
-            endMin: hhmmToMin(end),
-            timeLabel: `${start}~${end}`,
-          };
-        }),
-      );
-
+      await reloadMeetings();
       return { ok: true };
     } catch (err) {
       return { ok: false, message: "無法連線到伺服器" };
