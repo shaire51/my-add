@@ -41,7 +41,7 @@ function hasConflict(newM, meetings) {
 }
 
 export function MeetingsProvider({ children }) {
-  const API_BASE = "http://192.168.76.165:3001";
+  const API_BASE = import.meta.env.VITE_API_BASE || "";
   const API = `${API_BASE}/api/meetings`;
 
   function authHeaders(extra = {}) {

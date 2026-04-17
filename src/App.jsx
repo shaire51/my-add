@@ -38,7 +38,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/admin" element={<Admin />} />
               <Route path="/login" element={<Login />} />
               {/* 投影頁（不用登入） */}
               <Route path="/screen/2" element={<Body previewFloor={2} />} />

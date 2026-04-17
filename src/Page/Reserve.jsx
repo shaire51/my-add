@@ -7,8 +7,6 @@ import { useAuth } from "../stores/AuthContext.jsx";
 import { reserveSchema } from "../schemas/reserveSchema.js";
 
 const pad2 = (n) => String(n).padStart(2, "0");
-const API_BASE = "http://192.168.76.165:3001";
-
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18

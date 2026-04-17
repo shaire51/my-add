@@ -15,9 +15,9 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    console.log("VITE_API_BASE =", import.meta.env.VITE_API_BASE);
     try {
-      const API_BASE = "http://192.168.76.165:3001";
+      const API_BASE = import.meta.env.VITE_API_BASE || "";
 
       const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
@@ -36,7 +36,7 @@ export default function Login() {
       console.log("data.user.permissions =", data.user?.permissions);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
+      console.log("VITE_API_BASE =", import.meta.env.VITE_API_BASE);
       login(data.user);
 
       navigate("/reserve");

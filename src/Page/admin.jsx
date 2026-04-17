@@ -3,7 +3,7 @@ import { useAuth } from "../stores/AuthContext.jsx";
 import { useMeetings } from "../stores/meetingsStore.jsx";
 import "../styles/admin.css";
 import { useNavigate } from "react-router-dom";
-const API_BASE = "http://192.168.76.165:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 const API = `${API_BASE}/api/meetings`;
 
 export default function Admin() {

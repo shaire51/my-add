@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "../stores/AuthContext.jsx";
 import "../styles/PermissionAdmin.css";
 
-const API_BASE = "http://192.168.76.165:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 const PERMISSION_OPTIONS = [
   { code: "permission.assign.admin", name: "賦予管理權限" },
@@ -178,6 +178,10 @@ export default function PermissionAdmin() {
       </main>
     );
   }
+
+  console.log("PermissionAdmin user =", user);
+  console.log("PermissionAdmin permissions =", user?.permissions);
+  console.log("PermissionAdmin isAdmin =", isAdmin);
 
   return (
     <main className="permission-page">
