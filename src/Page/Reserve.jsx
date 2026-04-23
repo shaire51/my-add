@@ -304,7 +304,7 @@ export default function Reserve() {
                       errors.name ? "field-label error" : "field-label"
                     }
                   >
-                    會議名稱
+                    會議名稱 <span className="rr">*</span>
                   </label>
                   <input
                     id="name"
@@ -323,7 +323,7 @@ export default function Reserve() {
                       errors.unit ? "field-label error" : "field-label"
                     }
                   >
-                    主辦單位
+                    主辦單位 <span className="rr">*</span>
                   </label>
                   <input
                     id="unit"
@@ -341,7 +341,7 @@ export default function Reserve() {
                 <label
                   className={errors.date ? "field-label error" : "field-label"}
                 >
-                  會議日期
+                  會議日期 <span className="rr">*</span>
                 </label>
                 <input
                   id="date"
@@ -363,7 +363,7 @@ export default function Reserve() {
                       : "field-label"
                   }
                 >
-                  會議時間
+                  會議時間 <span className="rr">*</span>
                 </label>
 
                 <div className="meeting-time-video-row">
@@ -424,7 +424,7 @@ export default function Reserve() {
                     errors.people ? "field-label error" : "field-label"
                   }
                 >
-                  參加人員
+                  參加人員 <span className="rr">*</span>
                 </label>
                 <input
                   id="people"
@@ -441,7 +441,7 @@ export default function Reserve() {
                 <label
                   className={errors.place ? "field-label error" : "field-label"}
                 >
-                  會議室
+                  會議室 <span className="rr">*</span>
                 </label>
                 <select
                   id="place"

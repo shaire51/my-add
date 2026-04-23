@@ -377,3 +377,7 @@
 .video-check-wrap input[type="checkbox"] {
   margin: 0;
 }
+
+.rr {
+  color: red;
+}

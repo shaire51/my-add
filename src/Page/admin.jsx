@@ -120,9 +120,10 @@ export default function Admin() {
     setMsg("");
   };
 
-  const isEndedMeeting = (m) => {
-    const end = new Date(`${m.date}T${m.end_time || "00:00"}:00`);
-    return end.getTime() < Date.now();
+  const isStartedMeeting = (m) => {
+    const startTime = m.start_time || m.start || "00:00";
+    const start = new Date(`${m.date}T${startTime}:00`);
+    return Date.now() >= start.getTime();
   };
 
   const isAdmin = user?.permissions?.includes("permission.assign.admin");
@@ -145,10 +146,9 @@ export default function Admin() {
   };
 
   const canEditOrDelete = (m) => {
-    if (isEndedMeeting(m)) return false;
+    if (isStartedMeeting(m)) return false;
     return isAdmin || isOwner(m);
   };
-
   return (
     <main className="admin">
       <h2>會議管理</h2>

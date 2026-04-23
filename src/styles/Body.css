@@ -104,23 +104,26 @@
     gap: 24px;
   }
 
-  .hero-info {
-    order: 1; /*  資訊在上 */
-    width: 800px;
-    align-items: center;
+  @media (max-width: 1056px) {
+    .hero-info {
+      order: 1;
+      width: 100%;
+      align-items: center;
+    }
   }
 
   .hero-image {
-    order: 2; /* 圖片在下 */
+    order: 2;
     flex: none;
     width: 100%;
-    min-height: 220px;
+    height: 400px;
+    min-height: unset;
   }
+}
 
-  .primary-btn {
-    align-self: stretch;
-    text-align: center;
-  }
+.primary-btn {
+  align-self: stretch;
+  text-align: center;
 }
 
 /* 自由改文字顏色 + 描邊 */
@@ -202,25 +205,53 @@
 /* ✅ RWD：螢幕變窄才允許換行或改直排 */
 @media (max-width: 1056px) {
   .schedule-info {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 12px 20px;
+    align-items: start;
+    text-align: center;
+    width: 100%;
   }
 
-  .schedule-line,
-  .schedule-card-title {
-    white-space: normal;
-    overflow: visible;
+  .schedule-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0;
+    min-width: 0;
   }
 
-  /* RWD 時欄位改成自適應 */
   .schedule-col.title,
   .schedule-col.time,
   .schedule-col.meta,
   .schedule-col.people {
-    flex: auto;
+    width: auto;
+    flex: unset;
+  }
+
+  .schedule-line,
+  .schedule-card-title {
+    width: 100%;
+    margin: 2px 0;
+    white-space: normal;
+    overflow: visible;
   }
 
   .schedule-card {
     width: auto;
     height: auto;
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .schedule-info {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .schedule-info {
+    grid-template-columns: 1fr;
   }
 }
