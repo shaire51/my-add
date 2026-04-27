@@ -11,7 +11,6 @@ const pool = mysql
   })
   .promise();
 
-// 測試連線
 (async () => {
   try {
     const connection = await pool.getConnection();

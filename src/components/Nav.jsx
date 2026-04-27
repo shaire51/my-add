@@ -30,7 +30,11 @@ export default function Nav() {
     <nav className="nav">
       <div className="nav-left">
         <Link to="/">
-          <img src="/沙灘.jpg" alt="logo" className="logo" />
+          <img
+            src={`${import.meta.env.BASE_URL}沙灘.jpg`}
+            alt="logo"
+            className="logo"
+          />
         </Link>
       </div>
 
