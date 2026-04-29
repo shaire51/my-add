@@ -46,14 +46,7 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/search", async (req, res) => {
-  const {
-    from,
-    to,
-    place = "all",
-    q = "",
-    reporter = "",
-    unit = "",
-  } = req.query;
+  const { from, to, place, q, reporter, unit, is_video } = req.query;
 
   if (!from || !to) {
     return res.status(400).json({ message: "from、to 必填 (YYYY-MM-DD)" });
@@ -62,7 +55,7 @@ router.get("/search", async (req, res) => {
   let where = `WHERE date BETWEEN ? AND ?`;
   const params = [from, to];
 
-  if (place !== "all") {
+  if (place && place !== "all") {
     if (place === "2F") {
       where += ` AND (place LIKE ? OR place LIKE ? OR place LIKE ?)`;
       params.push("%二樓%", "%2樓%", "%2F%");
@@ -74,12 +67,16 @@ router.get("/search", async (req, res) => {
       params.push(`%${place}%`);
     }
   }
-
   const keyword = String(q || "").trim();
   if (keyword) {
     where += ` AND (name LIKE ? OR unit LIKE ? OR reporter LIKE ? OR place LIKE ?)`;
     const kw = `%${keyword}%`;
     params.push(kw, kw, kw, kw);
+  }
+
+  if (is_video === "1" || is_video === "0") {
+    where += ` AND is_video = ?`;
+    params.push(Number(is_video));
   }
 
   const reporterKeyword = String(reporter || "").trim();

@@ -20,6 +20,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [searchRows, setSearchRows] = useState(null);
   const [msg, setMsg] = useState("");
+  const [videoFilter, setVideoFilter] = useState("all");
 
   const rows = useMemo(() => {
     return searchRows !== null ? searchRows : baseRows;
@@ -60,6 +61,7 @@ export default function Admin() {
       from,
       to,
       ...(place !== "all" ? { place } : {}),
+      ...(videoFilter !== "all" ? { is_video: videoFilter } : {}),
       ...(q.trim() ? { q: q.trim() } : {}),
       ...(reporter.trim() ? { reporter: reporter.trim() } : {}),
       ...(unit.trim() ? { unit: unit.trim() } : {}),
@@ -113,6 +115,7 @@ export default function Admin() {
     setFrom("");
     setTo("");
     setPlace("all");
+    setVideoFilter("all");
     setQ("");
     setReporter("");
     setUnit("");
@@ -132,23 +135,78 @@ export default function Admin() {
     const owner = String(m.created_by || "")
       .trim()
       .toLowerCase();
-    const sub = String(user?.empId || user?.sub || "")
+
+    const loginId = String(user?.empId || user?.sub || "")
       .trim()
       .toLowerCase();
-
-    console.log("m.created_by =", m.created_by);
-    console.log("user.empId =", user?.empId);
-    console.log("user.sub =", user?.sub);
-    console.log("owner =", owner);
-    console.log("sub =", sub);
-
-    return owner === sub;
+    if (!owner || !loginId) return false;
+    return owner === loginId;
   };
 
   const canEditOrDelete = (m) => {
     if (isStartedMeeting(m)) return false;
     return isAdmin || isOwner(m);
   };
+
+  function exportMeetingsCSV() {
+    if (!rows || rows.length === 0) {
+      alert("目前沒有可匯出的會議資料");
+      return;
+    }
+
+    const headers = [
+      "會議名稱",
+      "日期",
+      "時間",
+      "地點",
+      "提報人",
+      "主辦單位",
+      "參加單位",
+      "是否視訊",
+      "參與人數",
+    ];
+
+    const csvRows = rows.map((m) => [
+      m.name || "",
+      m.date || "",
+      m.timeLabel || `${m.start_time || ""} ~ ${m.end_time || ""}`,
+      m.place || "",
+      m.reporter || "",
+      m.unit || "",
+      m.people || "",
+      m.isVideo ? "是" : "否",
+      m.participantCount ?? "",
+    ]);
+
+    const csvContent = [headers, ...csvRows]
+      .map((row) =>
+        row
+          .map((value) => {
+            const text = String(value).replace(/"/g, '""');
+            return `"${text}"`;
+          })
+          .join(","),
+      )
+      .join("\n");
+
+    // 加 BOM，避免 Excel 開啟 CSV 中文亂碼
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    a.href = url;
+    a.download = `會議資料_${today}.csv`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  const canExport = isAdmin || user?.permissions?.includes("meeting.export");
   return (
     <main className="admin">
       <h2>會議管理</h2>
@@ -180,6 +238,18 @@ export default function Admin() {
               <option value="all">全部</option>
               <option value="2F">二樓會議室</option>
               <option value="5F">五樓會議室</option>
+            </select>
+          </label>
+
+          <label>
+            是否視訊
+            <select
+              value={videoFilter}
+              onChange={(e) => setVideoFilter(e.target.value)}
+            >
+              <option value="all">全部</option>
+              <option value="1">是</option>
+              <option value="0">否</option>
             </select>
           </label>
 
@@ -226,6 +296,13 @@ export default function Admin() {
                 disabled={loading}
               >
                 清除查詢
+              </button>
+            )}
+          </div>
+          <div className="but">
+            {canExport && (
+              <button type="button" onClick={exportMeetingsCSV}>
+                匯出會議資料
               </button>
             )}
           </div>

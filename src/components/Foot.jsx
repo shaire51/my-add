@@ -1,5 +1,8 @@
 // src/components/Foot.jsx
 import "../styles/Foot.css";
+import "../styles/Foot.css";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 export default function Foot() {
   return (
@@ -7,7 +10,9 @@ export default function Foot() {
       <div className="footer-top">
         <span>會議系統預約</span>
         <div className="footer-links">
-          <span>使用手冊下載</span>
+          <a href={`${API_BASE}/uploads/manuals/meeting-manual.pdf`} download>
+            操作手冊下載
+          </a>
         </div>
       </div>
 

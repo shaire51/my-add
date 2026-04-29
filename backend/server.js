@@ -16,7 +16,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/login", loginRouter);
-app.use("/api/meetings", requireAuth, meetingRoutes);
+app.use("/api/meetings", meetingRoutes);
 app.use("/api/permissions", require("./routes/permissions"));
 
 app.listen(3001, "0.0.0.0", () => {

@@ -16,7 +16,7 @@ function App() {
   return (
     <AuthProvider>
       <MeetingsProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/meeting">
           <div className="board">
             <Nav />
             <Routes>

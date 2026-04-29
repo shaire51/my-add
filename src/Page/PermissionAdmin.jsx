@@ -7,6 +7,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "";
 const PERMISSION_OPTIONS = [
   { code: "permission.assign.admin", name: "賦予管理權限" },
   { code: "option.other.view", name: "查看其他選項" },
+  { code: "meeting.export", name: "匯出會議資料" },
 ];
 
 export default function PermissionAdmin() {
