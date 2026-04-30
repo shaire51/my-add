@@ -10,7 +10,7 @@ const pad2 = (n) => String(n).padStart(2, "0");
 // 時間選擇器
 function TimeSelect({ id, value, onChange }) {
   const hours = Array.from({ length: 11 }, (_, i) => 8 + i); // 8~18
-  const minutes = [0, 30];
+  const minutes = [0, 30, 45];
 
   const h = value ? Number(value.split(":")[0]) : "";
   const m = value ? Number(value.split(":")[1]) : "";

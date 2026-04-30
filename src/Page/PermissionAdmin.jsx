@@ -180,10 +180,6 @@ export default function PermissionAdmin() {
     );
   }
 
-  console.log("PermissionAdmin user =", user);
-  console.log("PermissionAdmin permissions =", user?.permissions);
-  console.log("PermissionAdmin isAdmin =", isAdmin);
-
   return (
     <main className="permission-page">
       <h2 className="permission-page__title">權限管理</h2>

@@ -1,7 +1,7 @@
 const express = require("express");
 const ldap = require("ldapjs");
 const jwt = require("jsonwebtoken");
-const pool = require("../db"); // 依你的實際 db 檔案路徑調整
+const pool = require("../db");
 
 const router = express.Router();
 

@@ -5,8 +5,6 @@ import { useAuth } from "../stores/AuthContext.jsx";
 import "../styles/Nav.css";
 
 export default function Nav() {
-  console.log("Nav 有進來");
-
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
@@ -21,11 +19,6 @@ export default function Nav() {
     logout();
     navigate("/login");
   };
-
-  console.log("Nav user =", user);
-  console.log("Nav permissions =", user?.permissions);
-  console.log("Nav isAdmin =", isAdmin);
-  console.log("Nav canSeeOthers =", canSeeOthers);
   return (
     <nav className="nav">
       <div className="nav-left">
